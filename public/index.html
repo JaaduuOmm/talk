@@ -1,356 +1,355 @@
-<!doctype html>
-<html lang="en" class="h-full">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Cloudflare Workers LLM Chat</title>
-    <meta name="color-scheme" content="light dark" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aro ai</title>
     <style>
-      /* ===== Design tokens ===== */
-      :root {
-        --bg: #0b0c0f;
-        --panel: #111318;
-        --muted: #9aa3b2;
-        --text: #e7ecf3;
-        --brand: #f6821f;
-        --brand-700: #e67e22;
-        --border: #1d212a;
-        --user: #1a1f2b;
-        --assistant: #121722;
-        --chip: #202635;
-        --shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
-      }
-
-      @media (prefers-color-scheme: light) {
-        :root {
-          --bg: #f8fafc;
-          --panel: #ffffff;
-          --muted: #6b7280;
-          --text: #0f172a;
-          --brand: #f6821f;
-          --brand-700: #e67e22;
-          --border: #e5e7eb;
-          --user: #fff8ef;
-          --assistant: #f3f4f6;
-          --chip: #f1f5f9;
-          --shadow: 0 12px 24px rgba(2,6,23,.06);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-      }
 
-      * { box-sizing: border-box; }
-      html, body { height: 100%; }
-      body {
-        margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI,
-        Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; background: var(--bg);
-        color: var(--text);
-      }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f8f8;
+            color: #333;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-      /* ===== App shell ===== */
-      .app { display: grid; grid-template-rows: auto 1fr auto; height: 100dvh; }
-      header {
-        position: sticky; top: 0; z-index: 10; backdrop-filter: saturate(120%) blur(8px);
-        background: color-mix(in oklab, var(--panel) 90%, transparent);
-        border-bottom: 1px solid var(--border); box-shadow: var(--shadow);
-      }
-      .bar { max-width: 1100px; margin: 0 auto; padding: 14px 16px; display: flex; gap: 12px; align-items: center; }
-      .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
-      .logo { width: 24px; height: 24px; border-radius: 6px; background: radial-gradient(120% 120% at 30% 30%, #ffd9b3 0, var(--brand) 40%, #b45309 100%); box-shadow: inset 0 0 6px rgba(0,0,0,.25); }
-      .pill { font-size: 12px; color: var(--muted); border: 1px solid var(--border); padding: 6px 10px; border-radius: 999px; }
+        .chat-container {
+            max-width: 1200px;
+            height: 100vh;
+            margin: 0 auto;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
 
-      .ctrls { margin-left: auto; display: flex; gap: 10px; align-items: center; }
-      .btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: var(--panel); color: var(--text); padding: 8px 12px; border-radius: 10px; cursor: pointer; transition: .2s ease; }
-      .btn:hover { border-color: color-mix(in oklab, var(--brand) 60%, var(--border)); }
-      .btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
-      .btn.primary:hover { background: var(--brand-700); border-color: var(--brand-700); }
-      .switch { display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); }
-      .switch input { appearance: none; width: 36px; height: 22px; background: var(--chip); border:1px solid var(--border); border-radius: 999px; position: relative; outline: none; transition: .2s; }
-      .switch input:after { content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; background:#fff; border-radius:50%; transition:.2s; }
-      .switch input:checked { background: var(--brand); }
-      .switch input:checked:after { left: 16px; }
+        /* Header */
+        .header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
 
-      /* ===== Main area ===== */
-      .main { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 14px; padding: 14px; }
+        .logo {
+            font-size: 18px;
+            font-weight: 300;
+            color: #666;
+        }
 
-      .chat { border:1px solid var(--border); background: var(--panel); border-radius: 16px; overflow: hidden; display: grid; grid-template-rows: 1fr auto; min-height: min(72dvh, 900px); }
-      .messages { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: linear-gradient(180deg, color-mix(in oklab, var(--panel) 94%, transparent), transparent 30%), radial-gradient(70% 50% at 50% 0%, color-mix(in oklab, var(--brand) 15%, transparent), transparent 60%); }
+        .status {
+            position: absolute;
+            right: 24px;
+            font-size: 12px;
+            color: #999;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
 
-      .bubble { max-width: 780px; padding: 14px 16px; border-radius: 14px; line-height: 1.6; border: 1px solid var(--border); box-shadow: var(--shadow); }
-      .bubble.user { align-self: flex-end; background: var(--user); }
-      .bubble.assistant { align-self: flex-start; background: var(--assistant); position: relative; }
-      .bubble p { margin: 0; white-space: pre-wrap; }
-      .bubble .meta { display:flex; gap:10px; align-items:center; font-size:12px; color: var(--muted); margin-top: 8px; }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
 
-      .typing { display:none; padding: 20px; color: var(--muted); }
-      .typing.visible { display:block; }
+        /* Messages */
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 24px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-      .composer { border-top: 1px solid var(--border); padding: 12px; display: grid; gap: 10px; background: linear-gradient(180deg, color-mix(in oklab, var(--panel) 80%, transparent), transparent); }
-      .inputrow { display:flex; gap:10px; align-items:flex-end; }
-      textarea { flex:1; min-height: 52px; max-height: 220px; resize: none; padding: 12px 14px; border-radius: 12px; border:1px solid var(--border); background: var(--panel); color: var(--text); box-shadow: var(--shadow); font: inherit; }
+        .message {
+            max-width: 75%;
+            line-height: 1.5;
+            font-size: 15px;
+        }
 
-      .uploader { display:flex; gap:10px; align-items:center; flex-wrap: wrap; }
-      .dropzone { border:1px dashed var(--border); background: color-mix(in oklab, var(--panel) 88%, transparent); padding: 10px 12px; border-radius: 12px; cursor: pointer; color: var(--muted); }
-      .chips { display:flex; gap:8px; flex-wrap:wrap; }
-      .chip { background: var(--chip); border:1px solid var(--border); border-radius: 999px; padding: 6px 10px; font-size: 12px; color: var(--muted); }
+        .message.user {
+            align-self: flex-end;
+            background: #f0f0f0;
+            padding: 12px 16px;
+            border-radius: 18px 18px 4px 18px;
+            color: #333;
+        }
 
-      footer { color: var(--muted); text-align:center; padding: 18px; font-size: 12px; }
+        .message.assistant {
+            align-self: flex-start;
+            color: #555;
+            padding: 12px 0;
+        }
 
-      /* Hide the legacy IDs from view; we’ll map them for chat.js compatibility */
-      #chat-messages, #user-input, #send-button, #typing-indicator { display: none; }
-      /* Assistive utilities */
-      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+        .typing {
+            align-self: flex-start;
+            color: #999;
+            font-size: 14px;
+            display: none;
+            padding: 12px 0;
+        }
+
+        .typing.visible {
+            display: block;
+        }
+
+        /* Input Area */
+        .input-section {
+            padding: 16px 24px 24px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .input-container {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            background: #f8f8f8;
+            border-radius: 24px;
+            padding: 4px;
+            border: 1px solid #e8e8e8;
+            transition: border-color 0.2s ease;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #ccc;
+        }
+
+        #user-input {
+            flex: 1;
+            min-height: 20px;
+            max-height: 120px;
+            padding: 12px 16px;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 15px;
+            resize: none;
+            line-height: 1.4;
+        }
+
+        #user-input::placeholder {
+            color: #aaa;
+        }
+
+        .send-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 16px;
+            background: #333;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: #555;
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Bottom Options */
+        .bottom-options {
+            padding: 16px 24px;
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            border-top: 1px solid #f0f0f0;
+            background: #fafafa;
+        }
+
+        .option-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .personality-selector {
+            display: flex;
+            gap: 8px;
+        }
+
+        .personality-btn {
+            padding: 6px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 16px;
+            background: white;
+            color: #666;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .personality-btn:hover {
+            border-color: #ccc;
+        }
+
+        .personality-btn.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        .premium-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #f59e0b;
+        }
+
+        .premium-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #fbbf24;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 8px;
+        }
+
+        .credits {
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .bottom-options {
+                flex-direction: column;
+                gap: 12px;
+                align-items: center;
+            }
+
+            .personality-selector {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .messages {
+                padding: 16px 16px 0;
+            }
+
+            .input-section {
+                padding: 12px 16px 16px;
+            }
+        }
+
+        /* Scrollbar */
+        .messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 2px;
+        }
     </style>
-  </head>
-  <body>
-    <div class="app">
-      <header>
-        <div class="bar">
-          <div class="brand"><span class="logo"></span>Cloudflare Workers LLM Chat</div>
-          <span class="pill">Powered by Workers AI</span>
-          <div class="ctrls">
-            <label class="switch" title="Auto‑read replies">
-              <input id="auto-tts" type="checkbox" />
-              <span>Auto TTS</span>
-            </label>
-            <button id="clear-chat" class="btn" type="button">Clear</button>
-          </div>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">aro ai</div>
+            <div class="status">
+                <div class="status-dot"></div>
+                <span id="status-text">helpful mode</span>
+            </div>
         </div>
-      </header>
 
-      <main class="main">
-        <section class="chat" aria-live="polite">
-          <!-- Pretty message list -->
-          <div id="nice-messages" class="messages"></div>
-          <div id="nice-typing" class="typing">AI is thinking…</div>
-
-          <!-- Composer -->
-          <div class="composer">
-            <div class="uploader">
-              <label class="dropzone" for="file-input">➕ Attach files (txt, md, pdf, csv)</label>
-              <input id="file-input" type="file" class="sr-only" multiple accept=".txt,.md,.markdown,.csv,.json,.pdf" />
-              <div id="file-chips" class="chips" aria-live="polite"></div>
-              <button id="inject-files" class="btn" type="button" title="Insert file contents into your next message">Insert into message</button>
+        <!-- Messages -->
+        <div class="messages" id="messages">
+            <div class="message assistant">
+                hi, i'm aro ai v2. how can i help you today?
             </div>
+        </div>
 
-            <div class="inputrow">
-              <textarea id="nice-input" placeholder="Message the AI…"></textarea>
-              <button id="nice-send" class="btn primary" type="button">Send ▶</button>
+        <div class="typing" id="typing">thinking...</div>
+
+        <!-- Input -->
+        <div class="input-section">
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="user-input" 
+                        placeholder="message aro ai..."
+                        rows="1"
+                    ></textarea>
+                    <button class="send-btn" id="send-btn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
-          </div>
-        </section>
-      </main>
+        </div>
 
-      <footer>© 2025 • Smooth, professional template. Built for Workers AI.</footer>
+        <!-- Bottom Options -->
+        <div class="bottom-options">
+            <div class="option-group">
+                <span class="option-label">mode</span>
+                <div class="personality-selector">
+                    <button class="personality-btn active" data-personality="helpful">helpful</button>
+                    <button class="personality-btn" data-personality="loving">loving</button>
+                    <button class="personality-btn" data-personality="creative">creative</button>
+                    <button class="personality-btn" data-personality="analytical">analytical</button>
+                    <button class="personality-btn" data-personality="humorous">humorous</button>
+                    <button class="personality-btn" data-personality="mentor">mentor</button>
+                </div>
+            </div>
+            
+            <div class="option-group">
+                <div class="premium-indicator">
+                    <div class="premium-icon">★</div>
+                    <span>images for premium</span>
+                </div>
+            </div>
+            
+            <div class="option-group">
+                <div class="credits">made by vedant roy & shaurya</div>
+            </div>
+        </div>
     </div>
 
-    <!-- ===== Hidden baseline DOM for your existing chat.js (do not change chat.js) ===== -->
-    <div id="chat-messages" aria-hidden="true"></div>
-    <div id="typing-indicator" aria-hidden="true">AI is thinking…</div>
-    <textarea id="user-input" aria-hidden="true"></textarea>
-    <button id="send-button" aria-hidden="true" type="button"></button>
-
-    <!-- Your unmodified chat logic -->
+    <!-- Chat app script -->
     <script src="chat.js"></script>
-
-    <!-- Enhancements: pro UI, TTS, uploads, and bridging to chat.js -->
-    <script>
-      // ===== Bridge pretty UI <-> legacy IDs expected by chat.js =====
-      const pretty = {
-        messages: document.getElementById('nice-messages'),
-        typing: document.getElementById('nice-typing'),
-        input: document.getElementById('nice-input'),
-        send: document.getElementById('nice-send'),
-        fileInput: document.getElementById('file-input'),
-        fileChips: document.getElementById('file-chips'),
-        injectBtn: document.getElementById('inject-files'),
-        autoTTS: document.getElementById('auto-tts'),
-        clearBtn: document.getElementById('clear-chat'),
-      };
-
-      // Map to the elements chat.js is using
-      const legacy = {
-        chatMessages: document.getElementById('chat-messages'),
-        typing: document.getElementById('typing-indicator'),
-        input: document.getElementById('user-input'),
-        send: document.getElementById('send-button'),
-      };
-
-      // Initial seed message in the pretty list
-      const seed = document.createElement('div');
-      seed.className = 'bubble assistant';
-      seed.innerHTML = `<p>Hello! I'm an LLM chat app powered by Cloudflare Workers AI. How can I help you today?</p>`;
-      pretty.messages.appendChild(seed);
-
-      // Keep legacy typing indicator in sync
-      const toggleTyping = (state) => {
-        pretty.typing.classList.toggle('visible', state);
-        legacy.typing.classList.toggle('visible', state);
-      };
-
-      // Mirror input value between pretty textarea and the hidden one chat.js reads
-      const mirrorInput = () => { legacy.input.value = pretty.input.value; };
-      pretty.input.addEventListener('input', mirrorInput);
-
-      // Send via pretty button or Enter
-      pretty.send.addEventListener('click', () => { mirrorInput(); legacy.send.click(); });
-      pretty.input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); mirrorInput(); legacy.send.click(); }
-      });
-
-      // Observe the hidden chat container and render nice bubbles + TTS buttons
-      const observer = new MutationObserver(() => {
-        // Clear and rebuild pretty list from legacy nodes
-        pretty.messages.innerHTML = '';
-        const nodes = legacy.chatMessages.querySelectorAll('.message');
-        nodes.forEach((node) => {
-          const isAssistant = node.classList.contains('assistant-message');
-          const bubble = document.createElement('div');
-          bubble.className = `bubble ${isAssistant ? 'assistant' : 'user'}`;
-          const text = node.querySelector('p')?.textContent || '';
-          const p = document.createElement('p');
-          p.textContent = text;
-          bubble.appendChild(p);
-
-          if (isAssistant) {
-            const meta = document.createElement('div');
-            meta.className = 'meta';
-            const play = document.createElement('button');
-            play.className = 'btn';
-            play.type = 'button';
-            play.textContent = '🔊 Read';
-            play.addEventListener('click', () => speak(text));
-            const stop = document.createElement('button');
-            stop.className = 'btn';
-            stop.type = 'button';
-            stop.textContent = '⏹ Stop';
-            stop.addEventListener('click', stopSpeaking);
-            meta.appendChild(play);
-            meta.appendChild(stop);
-            bubble.appendChild(meta);
-
-            if (pretty.autoTTS.checked && text.trim().length) {
-              speak(text);
-            }
-          }
-
-          pretty.messages.appendChild(bubble);
-        });
-        // Scroll to bottom
-        pretty.messages.scrollTop = pretty.messages.scrollHeight;
-      });
-      observer.observe(legacy.chatMessages, { childList: true, subtree: true });
-
-      // Keep typing indicator synced via class changes
-      const typingObserver = new MutationObserver(() => {
-        const visible = legacy.typing.classList.contains('visible');
-        pretty.typing.classList.toggle('visible', visible);
-      });
-      typingObserver.observe(legacy.typing, { attributes: true, attributeFilter: ['class'] });
-
-      // ===== TTS using Web Speech API =====
-      let currentUtterance = null;
-      function speak(text) {
-        try {
-          stopSpeaking();
-          const u = new SpeechSynthesisUtterance(text);
-          u.rate = 1.03; // tasteful speed
-          u.pitch = 1.0;
-          currentUtterance = u;
-          speechSynthesis.speak(u);
-        } catch (e) { console.warn('TTS not available', e); }
-      }
-      function stopSpeaking() {
-        if (speechSynthesis.speaking) speechSynthesis.cancel();
-        currentUtterance = null;
-      }
-
-      // ===== File attach & inline insert (no change to chat.js) =====
-      const attachments = []; // {name, type, text}
-      const MAX_EACH = 1024 * 1024; // 1 MB each
-      const ACCEPT_TEXT = ['text/plain', 'text/markdown', 'text/csv', 'application/json'];
-
-      function asChip(label) {
-        const el = document.createElement('span');
-        el.className = 'chip';
-        el.textContent = label;
-        return el;
-      }
-
-      function listChips() {
-        pretty.fileChips.innerHTML = '';
-        attachments.forEach(a => pretty.fileChips.appendChild(asChip(`${a.name} (${Math.ceil(a.text.length/1024)} KB)`)))
-      }
-
-      pretty.fileInput.addEventListener('change', async (e) => {
-        const files = Array.from(e.target.files || []);
-        for (const f of files) {
-          if (f.size > MAX_EACH) { alert(`${f.name}: too large (>1 MB)`); continue; }
-          if (f.type === 'application/pdf') {
-            // Read as base64 so the backend can decide how to handle
-            const buf = await f.arrayBuffer();
-            const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
-            attachments.push({ name: f.name, type: f.type, text: `data:application/pdf;base64,${b64}` });
-          } else if (ACCEPT_TEXT.includes(f.type) || /\.(md|markdown|txt|csv|json)$/i.test(f.name)) {
-            const text = await f.text();
-            attachments.push({ name: f.name, type: f.type || 'text/plain', text });
-          } else {
-            alert(`${f.name}: unsupported type. Use txt, md, csv, json, or pdf.`);
-          }
-        }
-        listChips();
-        // reset input so selecting the same file again works
-        e.target.value = '';
-      });
-
-      // Insert attachments into the next message as fenced blocks
-      pretty.injectBtn.addEventListener('click', () => {
-        if (!attachments.length) { alert('No files attached yet.'); return; }
-        const blocks = attachments.map(a => {
-          const header = `\n[Attachment: ${a.name}]`;
-          if (a.type === 'application/pdf') {
-            return `${header}\n(PDF base64 below; summarize or extract text if you can)\n\n\n\n${a.text.substring(0, 200_000)}`; // keep it sane
-          }
-          // Try to pick a language marker from extension
-          const lang = /\.(md|markdown)$/i.test(a.name) ? 'markdown' : /\.(csv)$/i.test(a.name) ? 'csv' : 'text';
-          return `${header}\n\n\u0060\u0060\u0060${lang}\n${a.text}\n\u0060\u0060\u0060`;
-        }).join('\n\n');
-
-        pretty.input.value = (pretty.input.value.trim() + '\n\n' + blocks).trim();
-        mirrorInput();
-        // Optional: clear attachments after inserting
-        attachments.length = 0; listChips();
-        pretty.input.focus();
-      });
-
-      // Clear chat (both UIs)
-      pretty.clearBtn.addEventListener('click', () => {
-        legacy.chatMessages.innerHTML = '';
-        pretty.messages.innerHTML = '';
-        const hello = document.createElement('div');
-        hello.className = 'bubble assistant';
-        hello.innerHTML = '<p>Hello! I\'m an LLM chat app powered by Cloudflare Workers AI. How can I help you today?</p>';
-        pretty.messages.appendChild(hello);
-        pretty.input.value = ''; mirrorInput(); stopSpeaking();
-      });
-
-      // Improve UX: auto-resize pretty textarea
-      const autoGrow = (el) => { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 220) + 'px'; };
-      pretty.input.addEventListener('input', () => autoGrow(pretty.input));
-      autoGrow(pretty.input);
-
-      // Optional drag & drop for the whole composer
-      const dropArea = document.querySelector('.composer');
-      ;['dragenter','dragover'].forEach(evt => dropArea.addEventListener(evt, e => { e.preventDefault(); dropArea.classList.add('drag'); }));
-      ;['dragleave','drop'].forEach(evt => dropArea.addEventListener(evt, e => { e.preventDefault(); dropArea.classList.remove('drag'); }));
-      dropArea.addEventListener('drop', (e) => {
-        const dt = e.dataTransfer; if (!dt) return; pretty.fileInput.files = dt.files; const ev = new Event('change'); pretty.fileInput.dispatchEvent(ev);
-      });
-
-      // Show "AI is thinking" when legacy toggles it
-      const originalAdd = classListToggle(legacy.typing, 'visible');
-      function classListToggle(el, klass) {
-        const _toggle = el.classList.toggle.bind(el.classList);
-        return (state) => { _toggle(klass, state); toggleTyping(state); };
-      }
-    </script>
-  </body>
+</body>
 </html>
