@@ -63,7 +63,7 @@
         }
 
         /* Messages */
-        .messages {
+        #chat-messages {
             flex: 1;
             overflow-y: auto;
             padding: 24px 24px 0;
@@ -78,7 +78,7 @@
             font-size: 15px;
         }
 
-        .message.user {
+        .user-message {
             align-self: flex-end;
             background: #f0f0f0;
             padding: 12px 16px;
@@ -86,13 +86,17 @@
             color: #333;
         }
 
-        .message.assistant {
+        .assistant-message {
             align-self: flex-start;
             color: #555;
             padding: 12px 0;
         }
 
-        .typing {
+        .message p {
+            margin: 0;
+        }
+
+        .typing-indicator {
             align-self: flex-start;
             color: #999;
             font-size: 14px;
@@ -100,7 +104,7 @@
             padding: 12px 0;
         }
 
-        .typing.visible {
+        .typing-indicator.visible {
             display: block;
         }
 
@@ -116,7 +120,7 @@
             margin: 0 auto;
         }
 
-        .input-wrapper {
+        .message-input {
             display: flex;
             align-items: flex-end;
             gap: 8px;
@@ -127,7 +131,7 @@
             transition: border-color 0.2s ease;
         }
 
-        .input-wrapper:focus-within {
+        .message-input:focus-within {
             border-color: #ccc;
         }
 
@@ -149,7 +153,7 @@
             color: #aaa;
         }
 
-        .send-btn {
+        #send-button {
             width: 32px;
             height: 32px;
             border: none;
@@ -164,11 +168,11 @@
             transition: all 0.2s ease;
         }
 
-        .send-btn:hover:not(:disabled) {
+        #send-button:hover:not(:disabled) {
             background: #555;
         }
 
-        .send-btn:disabled {
+        #send-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
@@ -260,7 +264,7 @@
                 justify-content: center;
             }
 
-            .messages {
+            #chat-messages {
                 padding: 16px 16px 0;
             }
 
@@ -270,17 +274,29 @@
         }
 
         /* Scrollbar */
-        .messages::-webkit-scrollbar {
+        #chat-messages::-webkit-scrollbar {
             width: 4px;
         }
 
-        .messages::-webkit-scrollbar-track {
+        #chat-messages::-webkit-scrollbar-track {
             background: transparent;
         }
 
-        .messages::-webkit-scrollbar-thumb {
+        #chat-messages::-webkit-scrollbar-thumb {
             background: #ddd;
             border-radius: 2px;
+        }
+
+        #typing-indicator {
+            align-self: flex-start;
+            color: #999;
+            font-size: 14px;
+            display: none;
+            padding: 12px 0;
+        }
+
+        #typing-indicator.visible {
+            display: block;
         }
     </style>
 </head>
@@ -296,24 +312,25 @@
         </div>
 
         <!-- Messages -->
-        <div class="messages" id="messages">
-            <div class="message assistant">
-                hi, i'm aro ai v2. how can i help you today?
+        <div id="chat-messages">
+            <div class="message assistant-message">
+                <p>hi, i'm aro ai v2. how can i help you today?</p>
             </div>
         </div>
 
-        <div class="typing" id="typing">thinking...</div>
+        <div id="typing-indicator">thinking...</div>
 
         <!-- Input -->
         <div class="input-section">
             <div class="input-container">
-                <div class="input-wrapper">
+                <div class="message-input">
                     <textarea 
                         id="user-input" 
                         placeholder="message aro ai..."
                         rows="1"
+                        autofocus
                     ></textarea>
-                    <button class="send-btn" id="send-btn">
+                    <button id="send-button">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>
                         </svg>
@@ -349,7 +366,49 @@
         </div>
     </div>
 
-    <!-- Chat app script -->
+    <script>
+        // Personality system integration
+        let currentPersonality = 'helpful';
+        const statusText = document.getElementById('status-text');
+
+        // Handle personality button clicks
+        document.querySelectorAll('.personality-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all buttons
+                document.querySelectorAll('.personality-btn').forEach(b => b.classList.remove('active'));
+                
+                // Add active class to clicked button
+                btn.classList.add('active');
+                
+                // Update current personality
+                currentPersonality = btn.dataset.personality;
+                statusText.textContent = `${currentPersonality} mode`;
+            });
+        });
+
+        // Override the original sendMessage function to add personality prefix
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options) {
+            if (url === '/api/chat' && options && options.method === 'POST') {
+                try {
+                    const body = JSON.parse(options.body);
+                    if (body.messages && body.messages.length > 0) {
+                        // Get the last user message and add personality prefix
+                        const lastMessage = body.messages[body.messages.length - 1];
+                        if (lastMessage.role === 'user') {
+                            lastMessage.content = `:${currentPersonality}: ${lastMessage.content}`;
+                        }
+                        options.body = JSON.stringify(body);
+                    }
+                } catch (e) {
+                    console.error('Error modifying message:', e);
+                }
+            }
+            return originalFetch.call(this, url, options);
+        };
+    </script>
+
+    <!-- Load your existing chat.js -->
     <script src="chat.js"></script>
 </body>
 </html>
