@@ -4,6 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>aro ai</title>
+    
+    <!-- Add marked.js for markdown parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
+    <!-- Add Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-tsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -90,6 +107,166 @@
             align-self: flex-start;
             color: #555;
             padding: 12px 0;
+        }
+
+        /* Markdown styles for assistant messages */
+        .assistant-message h1 {
+            font-size: 1.8em;
+            margin: 16px 0 12px 0;
+            color: #222;
+        }
+
+        .assistant-message h2 {
+            font-size: 1.5em;
+            margin: 14px 0 10px 0;
+            color: #333;
+        }
+
+        .assistant-message h3 {
+            font-size: 1.3em;
+            margin: 12px 0 8px 0;
+            color: #444;
+        }
+
+        .assistant-message h4 {
+            font-size: 1.1em;
+            margin: 10px 0 6px 0;
+            color: #555;
+        }
+
+        .assistant-message ul, .assistant-message ol {
+            margin: 8px 0;
+            padding-left: 24px;
+        }
+
+        .assistant-message li {
+            margin: 4px 0;
+        }
+
+        .assistant-message p {
+            margin: 8px 0;
+        }
+
+        .assistant-message blockquote {
+            border-left: 3px solid #ddd;
+            padding-left: 16px;
+            margin: 12px 0;
+            color: #666;
+            font-style: italic;
+        }
+
+        .assistant-message a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .assistant-message a:hover {
+            text-decoration: underline;
+        }
+
+        .assistant-message table {
+            border-collapse: collapse;
+            margin: 12px 0;
+            width: 100%;
+        }
+
+        .assistant-message th, .assistant-message td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .assistant-message th {
+            background: #f5f5f5;
+            font-weight: 600;
+        }
+
+        .assistant-message hr {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 16px 0;
+        }
+
+        .assistant-message strong {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .assistant-message em {
+            font-style: italic;
+        }
+
+        .assistant-message code:not([class*="language-"]) {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #d73a49;
+        }
+
+        /* Code block container */
+        .code-block-container {
+            position: relative;
+            margin: 12px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #2d2d30;
+        }
+
+        .code-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #1e1e1e;
+            border-bottom: 1px solid #3e3e42;
+        }
+
+        .code-language {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .code-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .code-action-btn {
+            padding: 4px 10px;
+            background: #3c3c3c;
+            border: 1px solid #4a4a4a;
+            border-radius: 4px;
+            color: #ccc;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .code-action-btn:hover {
+            background: #4a4a4a;
+            color: white;
+        }
+
+        .code-action-btn.copied {
+            background: #22c55e;
+            color: white;
+            border-color: #22c55e;
+        }
+
+        /* Override Prism styles */
+        .code-block-container pre {
+            margin: 0;
+            border-radius: 0;
+            padding: 16px;
+            overflow-x: auto;
+        }
+
+        .code-block-container pre[class*="language-"] {
+            background: #2d2d30;
         }
 
         .message p {
@@ -251,6 +428,152 @@
             color: #aaa;
         }
 
+        /* Code Preview Modal */
+        .code-preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .code-preview-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1000px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .modal-btn {
+            padding: 6px 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .modal-btn.primary {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        .modal-btn.primary:hover {
+            background: #555;
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: background 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: #f0f0f0;
+        }
+
+        .modal-body {
+            flex: 1;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .modal-tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 0 20px;
+            background: #fafafa;
+        }
+
+        .modal-tab {
+            padding: 10px 16px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 13px;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .modal-tab.active {
+            color: #333;
+            border-bottom-color: #333;
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow: auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .code-editor {
+            width: 100%;
+            height: 100%;
+            padding: 16px;
+            border: none;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            resize: none;
+            outline: none;
+            background: #fafafa;
+        }
+
+        .preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .bottom-options {
@@ -270,6 +593,11 @@
 
             .input-section {
                 padding: 12px 16px 16px;
+            }
+
+            .modal-content {
+                width: 95%;
+                height: 90vh;
             }
         }
 
@@ -366,7 +694,51 @@
         </div>
     </div>
 
+    <!-- Code Preview Modal -->
+    <div class="code-preview-modal" id="codePreviewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Code Preview</div>
+                <div style="display: flex; gap: 8px;">
+                    <div class="modal-tabs" style="border: none; padding: 0;">
+                        <button class="modal-tab active" onclick="switchTab('code')">Code</button>
+                        <button class="modal-tab" onclick="switchTab('preview')">Preview</button>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="modal-btn" onclick="downloadCode()">Download</button>
+                        <button class="modal-btn primary" onclick="copyModalCode()">Copy</button>
+                    </div>
+                    <button class="modal-close" onclick="closeModal()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="tab-content active" id="codeTab">
+                    <textarea class="code-editor" id="modalCodeEditor" readonly></textarea>
+                </div>
+                <div class="tab-content" id="previewTab">
+                    <iframe class="preview-iframe" id="previewFrame"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Configure marked options
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (Prism.languages[lang]) {
+                    return Prism.highlight(code, Prism.languages[lang], lang);
+                }
+                return code;
+            },
+            breaks: true,
+            gfm: true
+        });
+
         // Personality system integration
         let currentPersonality = 'helpful';
         const statusText = document.getElementById('status-text');
@@ -385,6 +757,166 @@
                 statusText.textContent = `${currentPersonality} mode`;
             });
         });
+
+        // Modal functions
+        let currentModalCode = '';
+        let currentModalLanguage = '';
+
+        function openCodeModal(code, language) {
+            currentModalCode = code;
+            currentModalLanguage = language;
+            
+            const modal = document.getElementById('codePreviewModal');
+            const editor = document.getElementById('modalCodeEditor');
+            
+            editor.value = code;
+            modal.classList.add('active');
+            
+            // If it's HTML, update the preview
+            if (language === 'html' || language === 'markup') {
+                updatePreview(code);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('codePreviewModal').classList.remove('active');
+        }
+
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        function updatePreview(code) {
+            const iframe = document.getElementById('previewFrame');
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write(code);
+            doc.close();
+        }
+
+        function downloadCode() {
+            const extension = currentModalLanguage === 'javascript' ? 'js' : 
+                             currentModalLanguage === 'python' ? 'py' :
+                             currentModalLanguage === 'markup' || currentModalLanguage === 'html' ? 'html' :
+                             currentModalLanguage === 'css' ? 'css' : 'txt';
+            
+            const blob = new Blob([currentModalCode], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `code.${extension}`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function copyModalCode() {
+            navigator.clipboard.writeText(currentModalCode).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Function to copy code
+        function copyCode(button, code) {
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Function to process markdown and add code block features
+        function processMarkdown(content) {
+            // First, render the markdown
+            let html = marked.parse(content);
+            
+            // Create a temporary div to manipulate the HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            
+            // Find all code blocks
+            const codeBlocks = tempDiv.querySelectorAll('pre');
+            
+            codeBlocks.forEach((pre, index) => {
+                const code = pre.querySelector('code');
+                if (code) {
+                    // Get the language from the class
+                    const classList = code.className.split(' ');
+                    let language = 'plaintext';
+                    classList.forEach(cls => {
+                        if (cls.startsWith('language-')) {
+                            language = cls.replace('language-', '');
+                        }
+                    });
+                    
+                    // Get the actual code content
+                    const codeContent = code.textContent;
+                    
+                    // Create a wrapper div
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'code-block-container';
+                    
+                    // Create header
+                    const header = document.createElement('div');
+                    header.className = 'code-block-header';
+                    
+                    const langLabel = document.createElement('span');
+                    langLabel.className = 'code-language';
+                    langLabel.textContent = language;
+                    
+                    const actions = document.createElement('div');
+                    actions.className = 'code-actions';
+                    
+                    // Copy button
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'code-action-btn';
+                    copyBtn.textContent = 'Copy';
+                    copyBtn.onclick = function() {
+                        copyCode(this, codeContent);
+                    };
+                    
+                    // View/Download button (especially for HTML)
+                    if (language === 'html' || language === 'markup' || language === 'javascript' || language === 'css') {
+                        const viewBtn = document.createElement('button');
+                        viewBtn.className = 'code-action-btn';
+                        viewBtn.textContent = 'Open Code';
+                        viewBtn.onclick = function() {
+                            openCodeModal(codeContent, language);
+                        };
+                        actions.appendChild(viewBtn);
+                    }
+                    
+                    actions.appendChild(copyBtn);
+                    
+                    header.appendChild(langLabel);
+                    header.appendChild(actions);
+                    
+                    wrapper.appendChild(header);
+                    wrapper.appendChild(pre.cloneNode(true));
+                    
+                    // Replace the original pre with our wrapper
+                    pre.parentNode.replaceChild(wrapper, pre);
+                }
+            });
+            
+            return tempDiv.innerHTML;
+        }
 
         // Override the original sendMessage function to add personality prefix
         const originalFetch = window.fetch;
@@ -408,7 +940,176 @@
         };
     </script>
 
-    <!-- Load your existing chat.js -->
-    <script src="chat.js"></script>
-</body>
-</html>
+    <!-- Modified chat.js with markdown support -->
+    <script>
+        /**
+         * LLM Chat App Frontend with Markdown Support
+         */
+
+        // DOM elements
+        const chatMessages = document.getElementById("chat-messages");
+        const userInput = document.getElementById("user-input");
+        const sendButton = document.getElementById("send-button");
+        const typingIndicator = document.getElementById("typing-indicator");
+
+        // Chat state
+        let chatHistory = [
+            {
+                role: "assistant",
+                content: "hi, i'm aro ai v2. how can i help you today?",
+            },
+        ];
+        let isProcessing = false;
+
+        // Auto-resize textarea as user types
+        userInput.addEventListener("input", function () {
+            this.style.height = "auto";
+            this.style.height = this.scrollHeight + "px";
+        });
+
+        // Send message on Enter (without Shift)
+        userInput.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Send button click handler
+        sendButton.addEventListener("click", sendMessage); and processes the response
+         */
+        async function sendMessage() {
+            const message = userInput.value.trim();
+
+            // Don't send empty messages
+            if (message === "" || isProcessing) return;
+
+            // Disable input while processing
+            isProcessing = true;
+            userInput.disabled = true;
+            sendButton.disabled = true;
+
+            // Add user message to chat
+            addMessageToChat("user", message);
+
+            // Clear input
+            userInput.value = "";
+            userInput.style.height = "auto";
+
+            // Show typing indicator
+            typingIndicator.classList.add("visible");
+
+            // Add message to history
+            chatHistory.push({ role: "user", content: message });
+
+            try {
+                // Create new assistant response element
+                const assistantMessageEl = document.createElement("div");
+                assistantMessageEl.className = "message assistant-message";
+                const contentDiv = document.createElement("div");
+                assistantMessageEl.appendChild(contentDiv);
+                chatMessages.appendChild(assistantMessageEl);
+
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Send request to API
+                const response = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        messages: chatHistory,
+                    }),
+                });
+
+                // Handle errors
+                if (!response.ok) {
+                    throw new Error("Failed to get response");
+                }
+
+                // Process streaming response
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let responseText = "";
+
+                while (true) {
+                    const { done, value } = await reader.read();
+
+                    if (done) {
+                        break;
+                    }
+
+                    // Decode chunk
+                    const chunk = decoder.decode(value, { stream: true });
+
+                    // Process SSE format
+                    const lines = chunk.split("\n");
+                    for (const line of lines) {
+                        try {
+                            const jsonData = JSON.parse(line);
+                            if (jsonData.response) {
+                                // Append new content to existing text
+                                responseText += jsonData.response;
+                                
+                                // Process markdown and update HTML
+                                contentDiv.innerHTML = processMarkdown(responseText);
+                                
+                                // Re-run Prism highlighting
+                                Prism.highlightAllUnder(contentDiv);
+
+                                // Scroll to bottom
+                                chatMessages.scrollTop = chatMessages.scrollHeight;
+                            }
+                        } catch (e) {
+                            // Not JSON, skip
+                        }
+                    }
+                }
+
+                // Add completed response to chat history
+                chatHistory.push({ role: "assistant", content: responseText });
+            } catch (error) {
+                console.error("Error:", error);
+                addMessageToChat(
+                    "assistant",
+                    "Sorry, there was an error processing your request.",
+                );
+            } finally {
+                // Hide typing indicator
+                typingIndicator.classList.remove("visible");
+
+                // Re-enable input
+                isProcessing = false;
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        /**
+         * Helper function to add message to chat
+         */
+        function addMessageToChat(role, content) {
+            const messageEl = document.createElement("div");
+            messageEl.className = `message ${role}-message`;
+            
+            if (role === "assistant") {
+                // Process markdown for assistant messages
+                const contentDiv = document.createElement("div");
+                contentDiv.innerHTML = processMarkdown(content);
+                messageEl.appendChild(contentDiv);
+                
+                // Run Prism highlighting
+                Prism.highlightAllUnder(messageEl);
+            } else {
+                // User messages are plain text
+                messageEl.innerHTML = `<p>${content}</p>`;
+            }
+            
+            chatMessages.appendChild(messageEl);
+
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
