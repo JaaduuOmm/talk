@@ -101,6 +101,7 @@
             padding: 12px 16px;
             border-radius: 18px 18px 4px 18px;
             color: #333;
+            white-space: pre-wrap;
         }
 
         .assistant-message {
@@ -324,6 +325,7 @@
             font-size: 15px;
             resize: none;
             line-height: 1.4;
+            overflow-y: auto;
         }
 
         #user-input::placeholder {
@@ -343,6 +345,7 @@
             justify-content: center;
             margin: 4px;
             transition: all 0.2s ease;
+            flex-shrink: 0;
         }
 
         #send-button:hover:not(:disabled) {
@@ -603,6 +606,10 @@
 
         /* Scrollbar */
         #chat-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .message-input::-webkit-scrollbar {
             width: 4px;
         }
 
@@ -918,35 +925,7 @@
             return tempDiv.innerHTML;
         }
 
-        // Override the original sendMessage function to add personality prefix
-        const originalFetch = window.fetch;
-        window.fetch = function(url, options) {
-            if (url === '/api/chat' && options && options.method === 'POST') {
-                try {
-                    const body = JSON.parse(options.body);
-                    if (body.messages && body.messages.length > 0) {
-                        // Get the last user message and add personality prefix
-                        const lastMessage = body.messages[body.messages.length - 1];
-                        if (lastMessage.role === 'user') {
-                            lastMessage.content = `:${currentPersonality}: ${lastMessage.content}`;
-                        }
-                        options.body = JSON.stringify(body);
-                    }
-                } catch (e) {
-                    console.error('Error modifying message:', e);
-                }
-            }
-            return originalFetch.call(this, url, options);
-        };
-    </script>
-
-    <!-- Modified chat.js with markdown support -->
-    <script>
-        /**
-         * LLM Chat App Frontend with Markdown Support
-         */
-
-        // DOM elements
+        // Chat functionality
         const chatMessages = document.getElementById("chat-messages");
         const userInput = document.getElementById("user-input");
         const sendButton = document.getElementById("send-button");
@@ -963,20 +942,33 @@
 
         // Auto-resize textarea as user types
         userInput.addEventListener("input", function () {
+            // Reset height to calculate new height
             this.style.height = "auto";
-            this.style.height = this.scrollHeight + "px";
+            
+            // Calculate the new height based on scroll height
+            const newHeight = Math.min(this.scrollHeight, 120); // Max height of 120px
+            this.style.height = newHeight + "px";
         });
 
-        // Send message on Enter (without Shift)
+        // Fixed Enter key handler
         userInput.addEventListener("keydown", function (e) {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
+            if (e.key === "Enter") {
+                if (e.shiftKey) {
+                    // Shift+Enter: Allow new line (default behavior)
+                    return;
+                } else {
+                    // Enter alone: Send message
+                    e.preventDefault();
+                    sendMessage();
+                }
             }
         });
 
         // Send button click handler
-        sendButton.addEventListener("click", sendMessage); and processes the response
+        sendButton.addEventListener("click", sendMessage);
+
+        /**
+         * Sends a message and processes the response
          */
         async function sendMessage() {
             const message = userInput.value.trim();
@@ -992,124 +984,8 @@
             // Add user message to chat
             addMessageToChat("user", message);
 
-            // Clear input
+            // Clear input and reset height
             userInput.value = "";
             userInput.style.height = "auto";
 
             // Show typing indicator
-            typingIndicator.classList.add("visible");
-
-            // Add message to history
-            chatHistory.push({ role: "user", content: message });
-
-            try {
-                // Create new assistant response element
-                const assistantMessageEl = document.createElement("div");
-                assistantMessageEl.className = "message assistant-message";
-                const contentDiv = document.createElement("div");
-                assistantMessageEl.appendChild(contentDiv);
-                chatMessages.appendChild(assistantMessageEl);
-
-                // Scroll to bottom
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-
-                // Send request to API
-                const response = await fetch("/api/chat", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        messages: chatHistory,
-                    }),
-                });
-
-                // Handle errors
-                if (!response.ok) {
-                    throw new Error("Failed to get response");
-                }
-
-                // Process streaming response
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let responseText = "";
-
-                while (true) {
-                    const { done, value } = await reader.read();
-
-                    if (done) {
-                        break;
-                    }
-
-                    // Decode chunk
-                    const chunk = decoder.decode(value, { stream: true });
-
-                    // Process SSE format
-                    const lines = chunk.split("\n");
-                    for (const line of lines) {
-                        try {
-                            const jsonData = JSON.parse(line);
-                            if (jsonData.response) {
-                                // Append new content to existing text
-                                responseText += jsonData.response;
-                                
-                                // Process markdown and update HTML
-                                contentDiv.innerHTML = processMarkdown(responseText);
-                                
-                                // Re-run Prism highlighting
-                                Prism.highlightAllUnder(contentDiv);
-
-                                // Scroll to bottom
-                                chatMessages.scrollTop = chatMessages.scrollHeight;
-                            }
-                        } catch (e) {
-                            // Not JSON, skip
-                        }
-                    }
-                }
-
-                // Add completed response to chat history
-                chatHistory.push({ role: "assistant", content: responseText });
-            } catch (error) {
-                console.error("Error:", error);
-                addMessageToChat(
-                    "assistant",
-                    "Sorry, there was an error processing your request.",
-                );
-            } finally {
-                // Hide typing indicator
-                typingIndicator.classList.remove("visible");
-
-                // Re-enable input
-                isProcessing = false;
-                userInput.disabled = false;
-                sendButton.disabled = false;
-                userInput.focus();
-            }
-        }
-
-        /**
-         * Helper function to add message to chat
-         */
-        function addMessageToChat(role, content) {
-            const messageEl = document.createElement("div");
-            messageEl.className = `message ${role}-message`;
-            
-            if (role === "assistant") {
-                // Process markdown for assistant messages
-                const contentDiv = document.createElement("div");
-                contentDiv.innerHTML = processMarkdown(content);
-                messageEl.appendChild(contentDiv);
-                
-                // Run Prism highlighting
-                Prism.highlightAllUnder(messageEl);
-            } else {
-                // User messages are plain text
-                messageEl.innerHTML = `<p>${content}</p>`;
-            }
-            
-            chatMessages.appendChild(messageEl);
-
-            // Scroll to bottom
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
