@@ -989,3 +989,145 @@
             userInput.style.height = "auto";
 
             // Show typing indicator
+            typingIndicator.classList.add("visible");
+
+            // Add message to history
+            chatHistory.push({ role: "user", content: message });
+
+            try {
+                // Create new assistant response element
+                const assistantMessageEl = document.createElement("div");
+                assistantMessageEl.className = "message assistant-message";
+                const contentDiv = document.createElement("div");
+                assistantMessageEl.appendChild(contentDiv);
+                chatMessages.appendChild(assistantMessageEl);
+
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Simulate API call (replace with your actual API endpoint)
+                // For demo purposes, we'll create a mock response
+                await simulateAPIResponse(contentDiv, message);
+
+            } catch (error) {
+                console.error("Error:", error);
+                addMessageToChat(
+                    "assistant",
+                    "Sorry, there was an error processing your request.",
+                );
+            } finally {
+                // Hide typing indicator
+                typingIndicator.classList.remove("visible");
+
+                // Re-enable input
+                isProcessing = false;
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        /**
+         * Simulate API response for demo purposes
+         * Replace this with your actual API call
+         */
+        async function simulateAPIResponse(contentDiv, userMessage) {
+            // Mock response based on personality and user input
+            let response = "";
+            
+            switch (currentPersonality) {
+                case 'helpful':
+                    response = `I understand you're asking about "${userMessage}". Let me help you with that!\n\nHere's what I can tell you:\n- This is a helpful response\n- I'm designed to assist with various tasks\n- Feel free to ask me anything else!`;
+                    break;
+                case 'loving':
+                    response = `Aww, thank you for sharing that with me! 💝 I really care about helping you with "${userMessage}". You're doing great by asking questions!`;
+                    break;
+                case 'creative':
+                    response = `Oh, what an interesting question about "${userMessage}"! Let me think creatively about this...\n\n🌟 Here's a creative perspective:\n\nImagine if we approached this from a completely new angle! What if we...\n\n\`\`\`javascript\n// Creative solution\nfunction solveCreatively(problem) {\n    return "innovative approach to " + problem;\n}\n\`\`\``;
+                    break;
+                case 'analytical':
+                    response = `Let me analyze your query about "${userMessage}" systematically:\n\n**Analysis Framework:**\n1. **Problem Definition**: ${userMessage}\n2. **Key Variables**: Multiple factors to consider\n3. **Methodology**: Structured approach\n4. **Expected Outcome**: Comprehensive solution\n\n**Conclusion**: Based on this analysis, I recommend...`;
+                    break;
+                case 'humorous':
+                    response = `Haha, you're asking about "${userMessage}"? That's like asking a fish about bicycle maintenance! 😄\n\nBut seriously, let me help you out here. *adjusts imaginary glasses* \n\nThe answer is probably 42... or maybe not! Let me give you a real answer that's both helpful AND entertaining!`;
+                    break;
+                case 'mentor':
+                    response = `Great question about "${userMessage}"! As your AI mentor, I want to guide you through this thoughtfully.\n\n**Let's break this down together:**\n\n🎯 **Learning Objective**: Understanding your query\n📚 **Key Concepts**: What you need to know\n💡 **Practical Application**: How to use this knowledge\n\n**My guidance**: Remember, learning is a journey. Take your time to understand each concept!`;
+                    break;
+                default:
+                    response = `Thanks for your message about "${userMessage}". How can I assist you further?`;
+            }
+
+            // Simulate typing effect
+            const words = response.split(' ');
+            let currentText = '';
+
+            for (let i = 0; i < words.length; i++) {
+                currentText += (i > 0 ? ' ' : '') + words[i];
+                
+                // Process markdown and update display
+                contentDiv.innerHTML = processMarkdown(currentText);
+                
+                // Re-run Prism highlighting
+                Prism.highlightAllUnder(contentDiv);
+
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                // Small delay to simulate typing
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+
+            // Add completed response to chat history
+            chatHistory.push({ role: "assistant", content: response });
+        }
+
+        /**
+         * Helper function to add message to chat
+         */
+        function addMessageToChat(role, content) {
+            const messageEl = document.createElement("div");
+            messageEl.className = `message ${role}-message`;
+            
+            if (role === "assistant") {
+                // Process markdown for assistant messages
+                const contentDiv = document.createElement("div");
+                contentDiv.innerHTML = processMarkdown(content);
+                messageEl.appendChild(contentDiv);
+                
+                // Run Prism highlighting
+                Prism.highlightAllUnder(messageEl);
+            } else {
+                // User messages preserve line breaks but are plain text
+                const contentDiv = document.createElement("div");
+                contentDiv.textContent = content;
+                messageEl.appendChild(contentDiv);
+            }
+            
+            chatMessages.appendChild(messageEl);
+
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Focus on input when page loads
+        window.addEventListener('load', () => {
+            userInput.focus();
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('codePreviewModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
