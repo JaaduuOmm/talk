@@ -573,6 +573,153 @@
             border: none;
         }
 
+        /* WELCOME POPUP STYLES - MINIMALISTIC */
+        .welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(248, 248, 248, 0.95);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .welcome-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .welcome-popup {
+            background: white;
+            border-radius: 12px;
+            padding: 0;
+            max-width: 420px;
+            width: 90%;
+            position: relative;
+            transform: scale(0.95) translateY(20px);
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e8e8e8;
+        }
+
+        .welcome-overlay.active .welcome-popup {
+            transform: scale(1) translateY(0);
+        }
+
+        .welcome-content {
+            padding: 36px 32px 32px;
+            text-align: center;
+            color: #333;
+        }
+
+        .welcome-logo {
+            font-size: 32px;
+            font-weight: 300;
+            color: #666;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .welcome-version {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 28px;
+            font-weight: 400;
+        }
+
+        .welcome-features {
+            text-align: left;
+            margin: 24px 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin: 12px 0;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: slideInFeature 0.4s ease forwards;
+        }
+
+        .feature-item:nth-child(1) { animation-delay: 0.1s; }
+        .feature-item:nth-child(2) { animation-delay: 0.2s; }
+        .feature-item:nth-child(3) { animation-delay: 0.3s; }
+        .feature-item:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes slideInFeature {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feature-icon {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+
+        .feature-text {
+            flex: 1;
+        }
+
+        .feature-title {
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 2px;
+            color: #333;
+        }
+
+        .feature-desc {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .welcome-actions {
+            margin-top: 28px;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .welcome-btn {
+            padding: 10px 20px;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            background: white;
+            color: #666;
+            font-size: 13px;
+            font-weight: 400;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .welcome-btn:hover {
+            background: #f8f8f8;
+            border-color: #ccc;
+        }
+
+        .welcome-btn.primary {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        .welcome-btn.primary:hover {
+            background: #555;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .bottom-options {
@@ -597,6 +744,18 @@
             .modal-content {
                 width: 95%;
                 height: 90vh;
+            }
+
+            .welcome-content {
+                padding: 32px 24px 24px;
+            }
+
+            .welcome-logo {
+                font-size: 36px;
+            }
+
+            .welcome-actions {
+                flex-direction: column;
             }
         }
 
@@ -632,6 +791,55 @@
     </style>
 </head>
 <body>
+    <!-- Welcome Popup -->
+    <div class="welcome-overlay" id="welcomeOverlay">
+        <div class="welcome-popup">
+            <div class="welcome-content">
+                <div class="welcome-logo">aro ai</div>
+                <div class="welcome-version">v2.0</div>
+                
+                <div class="welcome-features">
+                    <div class="feature-item">
+                        <div class="feature-icon"></div>
+                        <div class="feature-text">
+                            <div class="feature-title">More token usage</div>
+                            <div class="feature-desc">Enhanced capacity for longer conversations</div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon"></div>
+                        <div class="feature-text">
+                            <div class="feature-title">Custom trained</div>
+                            <div class="feature-desc">Specialized training for better performance</div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon"></div>
+                        <div class="feature-text">
+                            <div class="feature-title">Better responses</div>
+                            <div class="feature-desc">More accurate and helpful answers</div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon"></div>
+                        <div class="feature-text">
+                            <div class="feature-title">Personality modes</div>
+                            <div class="feature-desc">6 interaction styles to choose from</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="welcome-actions">
+                    <button class="welcome-btn" onclick="skipIntro()">Skip</button>
+                    <button class="welcome-btn primary" onclick="startExperience()">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="chat-container">
         <!-- Header -->
         <div class="header">
@@ -942,6 +1150,40 @@
             return tempDiv.innerHTML;
         }
 
+        // WELCOME POPUP FUNCTIONS
+        function showWelcomePopup() {
+            // Check if user has seen the popup before (simulate login check)
+            const hasSeenWelcome = localStorage.getItem('aroV2WelcomeSeen');
+            
+            if (!hasSeenWelcome) {
+                setTimeout(() => {
+                    document.getElementById('welcomeOverlay').classList.add('active');
+                }, 300);
+            }
+        }
+
+        function hideWelcomePopup() {
+            document.getElementById('welcomeOverlay').classList.remove('active');
+            localStorage.setItem('aroV2WelcomeSeen', 'true');
+        }
+
+        function startExperience() {
+            hideWelcomePopup();
+            // Add a simple welcome message to chat
+            setTimeout(() => {
+                const chatMessages = document.getElementById('chat-messages');
+                const welcomeMsg = document.createElement('div');
+                welcomeMsg.className = 'message assistant-message';
+                welcomeMsg.innerHTML = '<p>Welcome to aro ai v2! How can I help you today?</p>';
+                chatMessages.appendChild(welcomeMsg);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 200);
+        }
+
+        function skipIntro() {
+            hideWelcomePopup();
+        }
+
         // Close modal when clicking outside
         document.getElementById('codePreviewModal').addEventListener('click', function(e) {
             if (e.target === this) {
@@ -949,17 +1191,34 @@
             }
         });
 
+        // Close welcome popup when clicking outside
+        document.getElementById('welcomeOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideWelcomePopup();
+            }
+        });
+
         // Close modal with Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeModal();
+                if (document.getElementById('welcomeOverlay').classList.contains('active')) {
+                    hideWelcomePopup();
+                }
             }
         });
 
-        // Focus on input when page loads
+        // Show welcome popup on page load (simulating login)
         window.addEventListener('load', () => {
             document.getElementById('user-input').focus();
+            showWelcomePopup();
         });
+
+        // Dummy command as requested (this does nothing but exists as requested)
+        function dummyCommand() {
+            // CHAT.JS IS FOR BACKEND DONT CHANGE IT YOU MF
+            console.log('Dummy command executed - backend remains untouched');
+        }
     </script>
     
     <!-- Load your existing chat.js -->
