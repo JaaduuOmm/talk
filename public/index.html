@@ -1,1228 +1,388 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>aro ai</title>
-    
-    <!-- Add marked.js for markdown parsing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
-    <!-- Add Prism.js for syntax highlighting -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-tsx.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f8f8;
-            color: #333;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .chat-container {
-            max-width: 1200px;
-            height: 100vh;
-            margin: 0 auto;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        /* Header */
-        .header {
-            padding: 16px 24px;
-            border-bottom: 1px solid #e8e8e8;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        .logo {
-            font-size: 18px;
-            font-weight: 300;
-            color: #666;
-        }
-
-        .status {
-            position: absolute;
-            right: 24px;
-            font-size: 12px;
-            color: #999;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #22c55e;
-        }
-
-        /* Messages */
-        #chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px 24px 0;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .message {
-            max-width: 75%;
-            line-height: 1.5;
-            font-size: 15px;
-        }
-
-        .user-message {
-            align-self: flex-end;
-            background: #f0f0f0;
-            padding: 12px 16px;
-            border-radius: 18px 18px 4px 18px;
-            color: #333;
-            white-space: pre-wrap;
-        }
-
-        .assistant-message {
-            align-self: flex-start;
-            color: #555;
-            padding: 12px 0;
-        }
-
-        /* Markdown styles for assistant messages */
-        .assistant-message h1 {
-            font-size: 1.8em;
-            margin: 16px 0 12px 0;
-            color: #222;
-        }
-
-        .assistant-message h2 {
-            font-size: 1.5em;
-            margin: 14px 0 10px 0;
-            color: #333;
-        }
-
-        .assistant-message h3 {
-            font-size: 1.3em;
-            margin: 12px 0 8px 0;
-            color: #444;
-        }
-
-        .assistant-message h4 {
-            font-size: 1.1em;
-            margin: 10px 0 6px 0;
-            color: #555;
-        }
-
-        .assistant-message ul, .assistant-message ol {
-            margin: 8px 0;
-            padding-left: 24px;
-        }
-
-        .assistant-message li {
-            margin: 4px 0;
-        }
-
-        .assistant-message p {
-            margin: 8px 0;
-        }
-
-        .assistant-message blockquote {
-            border-left: 3px solid #ddd;
-            padding-left: 16px;
-            margin: 12px 0;
-            color: #666;
-            font-style: italic;
-        }
-
-        .assistant-message a {
-            color: #0066cc;
-            text-decoration: none;
-        }
-
-        .assistant-message a:hover {
-            text-decoration: underline;
-        }
-
-        .assistant-message table {
-            border-collapse: collapse;
-            margin: 12px 0;
-            width: 100%;
-        }
-
-        .assistant-message th, .assistant-message td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-
-        .assistant-message th {
-            background: #f5f5f5;
-            font-weight: 600;
-        }
-
-        .assistant-message hr {
-            border: none;
-            border-top: 1px solid #e0e0e0;
-            margin: 16px 0;
-        }
-
-        .assistant-message strong {
-            font-weight: 600;
-            color: #333;
-        }
-
-        .assistant-message em {
-            font-style: italic;
-        }
-
-        .assistant-message code:not([class*="language-"]) {
-            background: #f4f4f4;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 0.9em;
-            color: #d73a49;
-        }
-
-        /* Code block container */
-        .code-block-container {
-            position: relative;
-            margin: 12px 0;
-            border-radius: 8px;
-            overflow: hidden;
-            background: #2d2d30;
-        }
-
-        .code-block-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            background: #1e1e1e;
-            border-bottom: 1px solid #3e3e42;
-        }
-
-        .code-language {
-            font-size: 12px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .code-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .code-action-btn {
-            padding: 4px 10px;
-            background: #3c3c3c;
-            border: 1px solid #4a4a4a;
-            border-radius: 4px;
-            color: #ccc;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .code-action-btn:hover {
-            background: #4a4a4a;
-            color: white;
-        }
-
-        .code-action-btn.copied {
-            background: #22c55e;
-            color: white;
-            border-color: #22c55e;
-        }
-
-        /* Override Prism styles */
-        .code-block-container pre {
-            margin: 0;
-            border-radius: 0;
-            padding: 16px;
-            overflow-x: auto;
-        }
-
-        .code-block-container pre[class*="language-"] {
-            background: #2d2d30;
-        }
-
-        .typing-indicator {
-            align-self: flex-start;
-            color: #999;
-            font-size: 14px;
-            display: none;
-            padding: 12px 0;
-        }
-
-        .typing-indicator.visible {
-            display: block;
-        }
-
-        /* Input Area */
-        .input-section {
-            padding: 16px 24px 24px;
-            border-top: 1px solid #f0f0f0;
-        }
-
-        .input-container {
-            position: relative;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .message-input {
-            display: flex;
-            align-items: flex-end;
-            gap: 8px;
-            background: #f8f8f8;
-            border-radius: 24px;
-            padding: 4px;
-            border: 1px solid #e8e8e8;
-            transition: border-color 0.2s ease;
-        }
-
-        .message-input:focus-within {
-            border-color: #ccc;
-        }
-
-        #user-input {
-            flex: 1;
-            min-height: 20px;
-            max-height: 120px;
-            padding: 12px 16px;
-            border: none;
-            outline: none;
-            background: transparent;
-            font-family: inherit;
-            font-size: 15px;
-            resize: none;
-            line-height: 1.4;
-            overflow-y: auto;
-        }
-
-        #user-input::placeholder {
-            color: #aaa;
-        }
-
-        #send-button {
-            width: 32px;
-            height: 32px;
-            border: none;
-            border-radius: 16px;
-            background: #333;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 4px;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-        }
-
-        #send-button:hover:not(:disabled) {
-            background: #555;
-        }
-
-        #send-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Bottom Options */
-        .bottom-options {
-            padding: 16px 24px;
-            display: flex;
-            justify-content: center;
-            gap: 24px;
-            border-top: 1px solid #f0f0f0;
-            background: #fafafa;
-        }
-
-        .option-group {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .option-label {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .personality-selector {
-            display: flex;
-            gap: 8px;
-        }
-
-        .personality-btn {
-            padding: 6px 12px;
-            border: 1px solid #e0e0e0;
-            border-radius: 16px;
-            background: white;
-            color: #666;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .personality-btn:hover {
-            border-color: #ccc;
-        }
-
-        .personality-btn.active {
-            background: #333;
-            color: white;
-            border-color: #333;
-        }
-
-        .premium-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            color: #f59e0b;
-        }
-
-        .premium-icon {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #fbbf24;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 8px;
-        }
-
-        .credits {
-            font-size: 11px;
-            color: #aaa;
-        }
-
-        /* Code Preview Modal */
-        .code-preview-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            padding: 20px;
-        }
-
-        .code-preview-modal.active {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 1000px;
-            height: 80vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .modal-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-title {
-            font-size: 16px;
-            font-weight: 500;
-        }
-
-        .modal-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .modal-btn {
-            padding: 6px 14px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            background: white;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s ease;
-        }
-
-        .modal-btn:hover {
-            background: #f5f5f5;
-        }
-
-        .modal-btn.primary {
-            background: #333;
-            color: white;
-            border-color: #333;
-        }
-
-        .modal-btn.primary:hover {
-            background: #555;
-        }
-
-        .modal-close {
-            width: 28px;
-            height: 28px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            transition: background 0.2s ease;
-        }
-
-        .modal-close:hover {
-            background: #f0f0f0;
-        }
-
-        .modal-body {
-            flex: 1;
-            padding: 0;
-            overflow: hidden;
-            display: flex;
-        }
-
-        .modal-tabs {
-            display: flex;
-            border-bottom: 1px solid #e0e0e0;
-            padding: 0 20px;
-            background: #fafafa;
-        }
-
-        .modal-tab {
-            padding: 10px 16px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            font-size: 13px;
-            color: #666;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s ease;
-        }
-
-        .modal-tab.active {
-            color: #333;
-            border-bottom-color: #333;
-        }
-
-        .tab-content {
-            display: none;
-            flex: 1;
-            overflow: auto;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .code-editor {
-            width: 100%;
-            height: 100%;
-            padding: 16px;
-            border: none;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 13px;
-            resize: none;
-            outline: none;
-            background: #fafafa;
-        }
-
-        .preview-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* WELCOME POPUP STYLES - MINIMALISTIC */
-        .welcome-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(248, 248, 248, 0.95);
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .welcome-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .welcome-popup {
-            background: white;
-            border-radius: 12px;
-            padding: 0;
-            max-width: 420px;
-            width: 90%;
-            position: relative;
-            transform: scale(0.95) translateY(20px);
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e8e8e8;
-        }
-
-        .welcome-overlay.active .welcome-popup {
-            transform: scale(1) translateY(0);
-        }
-
-        .welcome-content {
-            padding: 36px 32px 32px;
-            text-align: center;
-            color: #333;
-        }
-
-        .welcome-logo {
-            font-size: 32px;
-            font-weight: 300;
-            color: #666;
-            margin-bottom: 4px;
-            letter-spacing: -0.5px;
-        }
-
-        .welcome-version {
-            font-size: 14px;
-            color: #999;
-            margin-bottom: 28px;
-            font-weight: 400;
-        }
-
-        .welcome-features {
-            text-align: left;
-            margin: 24px 0;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            margin: 12px 0;
-            opacity: 0;
-            transform: translateY(10px);
-            animation: slideInFeature 0.4s ease forwards;
-        }
-
-        .feature-item:nth-child(1) { animation-delay: 0.1s; }
-        .feature-item:nth-child(2) { animation-delay: 0.2s; }
-        .feature-item:nth-child(3) { animation-delay: 0.3s; }
-        .feature-item:nth-child(4) { animation-delay: 0.4s; }
-
-        @keyframes slideInFeature {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .feature-icon {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #22c55e;
-            margin-top: 8px;
-            flex-shrink: 0;
-        }
-
-        .feature-text {
-            flex: 1;
-        }
-
-        .feature-title {
-            font-weight: 500;
-            font-size: 14px;
-            margin-bottom: 2px;
-            color: #333;
-        }
-
-        .feature-desc {
-            font-size: 13px;
-            color: #666;
-            line-height: 1.4;
-        }
-
-        .welcome-actions {
-            margin-top: 28px;
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-        }
-
-        .welcome-btn {
-            padding: 10px 20px;
-            border: 1px solid #e8e8e8;
-            border-radius: 8px;
-            background: white;
-            color: #666;
-            font-size: 13px;
-            font-weight: 400;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .welcome-btn:hover {
-            background: #f8f8f8;
-            border-color: #ccc;
-        }
-
-        .welcome-btn.primary {
-            background: #333;
-            color: white;
-            border-color: #333;
-        }
-
-        .welcome-btn.primary:hover {
-            background: #555;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .bottom-options {
-                flex-direction: column;
-                gap: 12px;
-                align-items: center;
-            }
-
-            .personality-selector {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            #chat-messages {
-                padding: 16px 16px 0;
-            }
-
-            .input-section {
-                padding: 12px 16px 16px;
-            }
-
-            .modal-content {
-                width: 95%;
-                height: 90vh;
-            }
-
-            .welcome-content {
-                padding: 32px 24px 24px;
-            }
-
-            .welcome-logo {
-                font-size: 36px;
-            }
-
-            .welcome-actions {
-                flex-direction: column;
-            }
-        }
-
-        /* Scrollbar */
-        #chat-messages::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .message-input::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        #chat-messages::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        #chat-messages::-webkit-scrollbar-thumb {
-            background: #ddd;
-            border-radius: 2px;
-        }
-
-        #typing-indicator {
-            align-self: flex-start;
-            color: #999;
-            font-size: 14px;
-            display: none;
-            padding: 12px 0;
-        }
-
-        #typing-indicator.visible {
-            display: block;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ARO — Infinite AI Adventure</title>
+
+  <!-- Markdown + Syntax highlighting -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+  <style>
+    /* Minimal, professional dark UI */
+    :root{--bg:#0f1113;--panel:#121314;--muted:#9aa3ad;--accent:#7c5cff;--glass:rgba(255,255,255,0.03)}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,'Helvetica Neue',Arial; background:var(--bg); color:#e6eef6}
+    .wrap{width:1024px;max-width:calc(100% - 24px);height:86vh;margin:24px auto;border-radius:12px;overflow:hidden;display:flex;box-shadow:0 12px 40px rgba(0,0,0,0.6)}
+    .left{width:64%;background:linear-gradient(180deg,#0f1113,#121318);display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,0.03)}
+    .right{width:36%;background:linear-gradient(180deg,#0c0d0f,#0f1113);padding:18px;display:flex;flex-direction:column;gap:12px}
+
+    .header{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:space-between}
+    .brand{font-weight:600;letter-spacing:0.6px}
+    .status{color:var(--muted);font-size:12px}
+
+    #chat-messages{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+    .message{max-width:78%;white-space:pre-wrap;line-height:1.45}
+    .user-message{align-self:flex-end;background:linear-gradient(180deg,#1b1b1c,#161616);padding:10px 14px;border-radius:10px 10px 6px 10px;color:#dbe7ff}
+    .assistant-message{align-self:flex-start;background:transparent;padding:0}
+    .assistant-message .md{background:linear-gradient(180deg,#0f1315,#0a0c0d);padding:12px;border-radius:10px;color:#e6eef6;border:1px solid rgba(255,255,255,0.03)}
+
+    .input-area{padding:14px;border-top:1px solid rgba(255,255,255,0.02);display:flex;gap:12px;align-items:center}
+    textarea#user-input{flex:1;min-height:38px;max-height:140px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:var(--panel);color:#e6eef6;outline:none;resize:none}
+    button#send-button{background:var(--accent);border:none;color:white;padding:10px 14px;border-radius:8px;cursor:pointer}
+
+    /* HUD on right */
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+    .hud-row{display:flex;justify-content:space-between;align-items:center;padding:8px 6px}
+    .hud-row strong{font-size:13px}
+    .inventory{min-height:64px;overflow:auto;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);background:var(--glass)}
+
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:#d7e2f2;cursor:pointer}
+    .btn.ghost{background:transparent}
+
+    .small{font-size:12px;color:var(--muted)}
+
+    /* code block UI actions (copied from user's UI concept) */
+    .code-actions{display:flex;gap:8px;margin-top:8px}
+
+    @media (max-width:900px){.wrap{flex-direction:column;height:92vh}.left,.right{width:100%}.right{order:2}}
+  </style>
 </head>
 <body>
-    <!-- Welcome Popup -->
-    <div class="welcome-overlay" id="welcomeOverlay">
-        <div class="welcome-popup">
-            <div class="welcome-content">
-                <div class="welcome-logo">aro ai</div>
-                <div class="welcome-version">v2.0</div>
-                
-                <div class="welcome-features">
-                    <div class="feature-item">
-                        <div class="feature-icon"></div>
-                        <div class="feature-text">
-                            <div class="feature-title">More token usage</div>
-                            <div class="feature-desc">Enhanced capacity for longer conversations</div>
-                        </div>
-                    </div>
-                    
-                    <div class="feature-item">
-                        <div class="feature-icon"></div>
-                        <div class="feature-text">
-                            <div class="feature-title">Custom trained</div>
-                            <div class="feature-desc">Specialized training for better performance</div>
-                        </div>
-                    </div>
-                    
-                    <div class="feature-item">
-                        <div class="feature-icon"></div>
-                        <div class="feature-text">
-                            <div class="feature-title">Better responses</div>
-                            <div class="feature-desc">More accurate and helpful answers</div>
-                        </div>
-                    </div>
-                    
-                    <div class="feature-item">
-                        <div class="feature-icon"></div>
-                        <div class="feature-text">
-                            <div class="feature-title">Personality modes</div>
-                            <div class="feature-desc">6 interaction styles to choose from</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="welcome-actions">
-                    <button class="welcome-btn" onclick="skipIntro()">Skip</button>
-                    <button class="welcome-btn primary" onclick="startExperience()">Continue</button>
-                </div>
-            </div>
+  <div class="wrap">
+    <div class="left">
+      <div class="header">
+        <div class="brand">ARO — Infinite AI Adventure</div>
+        <div class="status">Mode: <span id="status-text">adventure</span></div>
+      </div>
+
+      <div id="chat-messages">
+        <div class="message assistant-message">
+          <div class="md">
+            <strong>Welcome to ARO.</strong>
+            <p>Type anything to begin your adventure. The AI will manage health, XP and inventory automatically. Hidden environment commands (<code>&lt;aro:.../&gt;</code>) may run effects without appearing to the player.</p>
+          </div>
         </div>
+      </div>
+
+      <div class="input-area">
+        <textarea id="user-input" placeholder="Type an action (e.g., 'sneak past the sentry')"></textarea>
+        <button id="send-button">Send</button>
+      </div>
     </div>
 
-    <div class="chat-container">
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">aro ai</div>
-            <div class="status">
-                <div class="status-dot"></div>
-                <span id="status-text">helpful mode</span>
-            </div>
+    <aside class="right">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><strong>Player HUD</strong><div class="small">Live stats parsed from AI output</div></div>
+          <div class="small">v1.1</div>
         </div>
 
-        <!-- Messages -->
-        <div id="chat-messages">
-            <div class="message assistant-message">
-                <p>Hello! I'm an LLM chat app powered by Cloudflare Workers AI. How can I help you today?</p>
-            </div>
+        <div class="hud-row"><strong>❤️ Health</strong><div id="stat-health">100 / 100</div></div>
+        <div class="hud-row"><strong>⭐ XP</strong><div id="stat-xp">0</div></div>
+        <div class="hud-row"><strong>🔰 Level</strong><div id="stat-level">1</div></div>
+        <div style="margin-top:8px"><strong>🎒 Inventory</strong></div>
+        <div class="inventory" id="inventory-items">None</div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+          <button class="btn" id="save-btn">💾 Save (.aiplay)</button>
+          <input id="load-input" type="file" accept=".aiplay" style="display:none" />
+          <button class="btn" id="load-btn">📂 Load (.aiplay)</button>
+          <button class="btn" id="export-prompt">🧾 System Prompt</button>
         </div>
 
-        <div id="typing-indicator">thinking...</div>
-
-        <!-- Input -->
-        <div class="input-section">
-            <div class="input-container">
-                <div class="message-input">
-                    <textarea 
-                        id="user-input" 
-                        placeholder="message aro ai..."
-                        rows="1"
-                        autofocus
-                    ></textarea>
-                    <button id="send-button">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
+        <div style="margin-top:12px">
+          <div class="small">Hidden Effects Demo: animations, shakes, ambient audio & visual tweaks.</div>
+          <div class="code-actions">
+            <button class="btn" id="demo-shake">Demo Shake</button>
+            <button class="btn" id="demo-light">Demo Light</button>
+            <button class="btn" id="demo-sound">Demo Sound</button>
+          </div>
         </div>
+      </div>
 
-        <!-- Bottom Options -->
-        <div class="bottom-options">
-            <div class="option-group">
-                <span class="option-label">mode</span>
-                <div class="personality-selector">
-                    <button class="personality-btn active" data-personality="helpful">helpful</button>
-                    <button class="personality-btn" data-personality="loving">loving</button>
-                    <button class="personality-btn" data-personality="creative">creative</button>
-                    <button class="personality-btn" data-personality="analytical">analytical</button>
-                    <button class="personality-btn" data-personality="humorous">humorous</button>
-                    <button class="personality-btn" data-personality="mentor">mentor</button>
-                </div>
-            </div>
-            
-            <div class="option-group">
-                <div class="premium-indicator">
-                    <div class="premium-icon">★</div>
-                    <span>images for premium</span>
-                </div>
-            </div>
-            
-            <div class="option-group">
-                <div class="credits">made by vedant roy & shaurya</div>
-            </div>
+      <div class="panel" style="margin-top:12px">
+        <strong>Controls</strong>
+        <div class="small" style="margin-top:8px">Quick tools to assist development.</div>
+        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" id="clear-chat">Clear Chat</button>
+          <button class="btn" id="autosave-toggle">Autosave: On</button>
         </div>
-    </div>
+      </div>
 
-    <!-- Code Preview Modal -->
-    <div class="code-preview-modal" id="codePreviewModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title">Code Preview</div>
-                <div style="display: flex; gap: 8px;">
-                    <div class="modal-tabs" style="border: none; padding: 0;">
-                        <button class="modal-tab active" onclick="switchTab('code')">Code</button>
-                        <button class="modal-tab" onclick="switchTab('preview')">Preview</button>
-                    </div>
-                    <div class="modal-actions">
-                        <button class="modal-btn" onclick="downloadCode()">Download</button>
-                        <button class="modal-btn primary" onclick="copyModalCode()">Copy</button>
-                    </div>
-                    <button class="modal-close" onclick="closeModal()">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 6L6 18M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div class="modal-body">
-                <div class="tab-content active" id="codeTab">
-                    <textarea class="code-editor" id="modalCodeEditor" readonly></textarea>
-                </div>
-                <div class="tab-content" id="previewTab">
-                    <iframe class="preview-iframe" id="previewFrame"></iframe>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <script>
-        // Configure marked options for markdown parsing
-        marked.setOptions({
-            highlight: function(code, lang) {
-                if (Prism.languages[lang]) {
-                    return Prism.highlight(code, Prism.languages[lang], lang);
-                }
-                return code;
-            },
-            breaks: true,
-            gfm: true
-        });
+      <div class="panel" style="margin-top:12px">
+        <strong>Notes</strong>
+        <div class="small" style="margin-top:8px">This page expects <code>chat.js</code> (your backend streaming client) to be present and unmodified. It augments the UI, parses AI Markdown + hidden &lt;aro:.../&gt; directives, and exposes Save/Load for <code>.aiplay</code> files.</div>
+      </div>
+    </aside>
+  </div>
 
-        // Personality system integration
-        let currentPersonality = 'helpful';
-        const statusText = document.getElementById('status-text');
+  <!-- Your backend chat client (must exist in same folder) -->
+  <script src="chat.js"></script>
 
-        // Handle personality button clicks
-        document.querySelectorAll('.personality-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Remove active class from all buttons
-                document.querySelectorAll('.personality-btn').forEach(b => b.classList.remove('active'));
-                
-                // Add active class to clicked button
-                btn.classList.add('active');
-                
-                // Update current personality
-                currentPersonality = btn.dataset.personality;
-                statusText.textContent = `${currentPersonality} mode`;
-            });
-        });
+  <script>
+  /*
+    Frontend integration script.
+    - Observes new messages, renders Markdown, strips and processes <aro:.../> hidden commands
+    - Maintains a simple message log (raw) for .aiplay export/import
+    - Updates HUD (health/xp/inventory/level) by parsing AI output
+    - Lightweight effects engine (shake, light, animate, sound)
+  */
 
-        // Override fetch to inject personality into API calls
-        const originalFetch = window.fetch;
-        window.fetch = function(url, options) {
-            if (url === '/api/chat' && options && options.method === 'POST') {
-                try {
-                    const body = JSON.parse(options.body);
-                    if (body.messages && body.messages.length > 0) {
-                        // Get the last user message and add personality prefix
-                        const lastMessage = body.messages[body.messages.length - 1];
-                        if (lastMessage.role === 'user') {
-                            lastMessage.content = `:${currentPersonality}: ${lastMessage.content}`;
-                        }
-                        options.body = JSON.stringify(body);
-                    }
-                } catch (e) {
-                    console.error('Error modifying message:', e);
-                }
+  // Markdown rendering config
+  marked.setOptions({gfm:true,breaks:true});
+
+  const chatBox = document.getElementById('chat-messages');
+  const userInput = document.getElementById('user-input');
+  const sendButton = document.getElementById('send-button');
+  const saveBtn = document.getElementById('save-btn');
+  const loadBtn = document.getElementById('load-btn');
+  const loadInput = document.getElementById('load-input');
+  const exportPromptBtn = document.getElementById('export-prompt');
+  const demoShake = document.getElementById('demo-shake');
+  const demoLight = document.getElementById('demo-light');
+  const demoSound = document.getElementById('demo-sound');
+  const clearChatBtn = document.getElementById('clear-chat');
+  const autosaveToggle = document.getElementById('autosave-toggle');
+
+  const statHealth = document.getElementById('stat-health');
+  const statXp = document.getElementById('stat-xp');
+  const statLevel = document.getElementById('stat-level');
+  const inventoryEl = document.getElementById('inventory-items');
+
+  // Message log stores raw text (including hidden commands) and role
+  let messageLog = [];
+  let autosave = true;
+
+  // Basic effects engine
+  const effects = {
+    shake: (opts={}) => {
+      const intensity = {low:6,medium:12,high:22}[opts.intensity] || 8;
+      const duration = (parseFloat(opts.duration)||1.2) * 1000;
+      const el = document.querySelector('.wrap');
+      const start = Date.now();
+      const orig = el.style.transform || '';
+      const tick = () => {
+        const now = Date.now();
+        if (now - start > duration) { el.style.transform = orig; return; }
+        const x = (Math.random() - 0.5) * intensity;
+        const y = (Math.random() - 0.5) * intensity;
+        el.style.transform = `translate(${x}px, ${y}px)`;
+        requestAnimationFrame(tick);
+      };
+      tick();
+    },
+    light: (opts={}) => {
+      const color = opts.color || '#111111';
+      const flicker = opts.flicker === 'true';
+      const body = document.body;
+      const orig = body.style.background;
+      if (!flicker) { body.style.background = color; setTimeout(()=>body.style.background=orig, 2500); return; }
+      let on = true;
+      const interval = setInterval(()=>{
+        body.style.background = on ? color : orig;
+        on = !on;
+      }, 180);
+      setTimeout(()=>{ clearInterval(interval); body.style.background = orig; }, 3000);
+    },
+    animate: (opts={}) => {
+      // placeholder: you can map effects to CSS classes or particles
+      console.log('animate', opts);
+    },
+    sound: (opts={}) => {
+      if (!opts.src) return;
+      try {
+        const audio = new Audio(opts.src);
+        audio.volume = parseFloat(opts.volume)||0.5;
+        audio.loop = opts.loop === 'true';
+        audio.play().catch(()=>console.warn('Autoplay prevented - user gesture required'));
+        // store reference if you want to stop later
+      } catch(e){console.warn('sound error', e)}
+    }
+  };
+
+  // Regex helpers
+  const aroRegex = /<aro:(\w+)([^>]*)\/>/g;
+  const attrRegex = /(\w+)="([^"]*)"/g;
+  const statRegex = /\*\*Health:\*\*\s*(\d+)\s*\/\s*(\d+)[\s\S]*?\*\*XP:\*\*\s*(\d+)/i;
+  const invRegex = /\*\*Inventory:\*\*\s*([^\n\r]+)/i;
+  const lvlRegex = /\*\*Level:\*\*\s*(\d+)/i;
+
+  // Observe chat DOM for new messages
+  const mutationObserver = new MutationObserver((mutations)=>{
+    for (const m of mutations) {
+      for (const node of m.addedNodes) {
+        if (!(node instanceof HTMLElement)) continue;
+        if (node.classList.contains('message')) {
+          // determine role
+          const role = node.classList.contains('user-message') ? 'user' : 'assistant';
+          // get raw text (before rendering)
+          const p = node.querySelector('p');
+          let raw = '';
+          if (p) raw = p.textContent || p.innerText || '';
+          else raw = node.innerText || node.textContent || '';
+
+          // Push to message log
+          messageLog.push({role, raw});
+
+          // If assistant, render markdown and process hidden commands
+          if (role === 'assistant') {
+            // process hidden <aro:.../> commands from raw
+            const commands = [];
+            let match;
+            while ((match = aroRegex.exec(raw)) !== null) {
+              const cmd = match[1];
+              const paramsStr = match[2] || '';
+              const params = {};
+              let m2;
+              while ((m2 = attrRegex.exec(paramsStr)) !== null) params[m2[1]] = m2[2];
+              commands.push({cmd, params});
             }
-            return originalFetch.call(this, url, options);
-        };
 
-        // Modal functions
-        let currentModalCode = '';
-        let currentModalLanguage = '';
+            // Run effects for each command
+            commands.forEach(c=>{ if (effects[c.cmd]) effects[c.cmd](c.params); });
 
-        function openCodeModal(code, language) {
-            currentModalCode = code;
-            currentModalLanguage = language;
-            
-            const modal = document.getElementById('codePreviewModal');
-            const editor = document.getElementById('modalCodeEditor');
-            
-            editor.value = code;
-            modal.classList.add('active');
-            
-            // If it's HTML, update the preview
-            if (language === 'html' || language === 'markup') {
-                updatePreview(code);
+            // Remove the hidden tags from visible markdown
+            const visibleMd = raw.replace(aroRegex, '').trim();
+
+            // Render Markdown safely
+            const mdHtml = marked.parse(visibleMd);
+
+            // Wrap into styled container
+            node.innerHTML = `<div class="md">${mdHtml}</div>`;
+
+            // After rendering, syntax highlight code blocks
+            node.querySelectorAll('pre code').forEach((el)=>{ try{ Prism.highlightElement(el);}catch(e){}});
+
+            // Update HUD (stats + inventory)
+            const textForStats = visibleMd;
+            const sMatch = textForStats.match(statRegex);
+            if (sMatch) {
+              statHealth.textContent = `${sMatch[1]} / ${sMatch[2]}`;
+              statXp.textContent = sMatch[3];
+              // derive level from xp
+              const lvl = Math.max(1, Math.floor(parseInt(sMatch[3],10)/200) + 1);
+              statLevel.textContent = lvl;
             }
-        }
-
-        function closeModal() {
-            document.getElementById('codePreviewModal').classList.remove('active');
-        }
-
-        function switchTab(tab) {
-            // Update tab buttons
-            document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            
-            // Update tab content
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.getElementById(tab + 'Tab').classList.add('active');
-        }
-
-        function updatePreview(code) {
-            const iframe = document.getElementById('previewFrame');
-            const doc = iframe.contentDocument || iframe.contentWindow.document;
-            doc.open();
-            doc.write(code);
-            doc.close();
-        }
-
-        function downloadCode() {
-            const extension = currentModalLanguage === 'javascript' ? 'js' : 
-                             currentModalLanguage === 'python' ? 'py' :
-                             currentModalLanguage === 'markup' || currentModalLanguage === 'html' ? 'html' :
-                             currentModalLanguage === 'css' ? 'css' : 'txt';
-            
-            const blob = new Blob([currentModalCode], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `code.${extension}`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-        }
-
-        function copyModalCode() {
-            navigator.clipboard.writeText(currentModalCode).then(() => {
-                const btn = event.target;
-                const originalText = btn.textContent;
-                btn.textContent = 'Copied!';
-                btn.classList.add('copied');
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                    btn.classList.remove('copied');
-                }, 2000);
-            });
-        }
-
-        // Function to copy code
-        function copyCode(button, code) {
-            navigator.clipboard.writeText(code).then(() => {
-                const originalText = button.textContent;
-                button.textContent = 'Copied!';
-                button.classList.add('copied');
-                setTimeout(() => {
-                    button.textContent = originalText;
-                    button.classList.remove('copied');
-                }, 2000);
-            });
-        }
-
-        // Function to process markdown and add code block features
-        function processMarkdown(content) {
-            // First, render the markdown
-            let html = marked.parse(content);
-            
-            // Create a temporary div to manipulate the HTML
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            
-            // Find all code blocks
-            const codeBlocks = tempDiv.querySelectorAll('pre');
-            
-            codeBlocks.forEach((pre, index) => {
-                const code = pre.querySelector('code');
-                if (code) {
-                    // Get the language from the class
-                    const classList = code.className.split(' ');
-                    let language = 'plaintext';
-                    classList.forEach(cls => {
-                        if (cls.startsWith('language-')) {
-                            language = cls.replace('language-', '');
-                        }
-                    });
-                    
-                    // Get the actual code content
-                    const codeContent = code.textContent;
-                    
-                    // Create a wrapper div
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'code-block-container';
-                    
-                    // Create header
-                    const header = document.createElement('div');
-                    header.className = 'code-block-header';
-                    
-                    const langLabel = document.createElement('span');
-                    langLabel.className = 'code-language';
-                    langLabel.textContent = language;
-                    
-                    const actions = document.createElement('div');
-                    actions.className = 'code-actions';
-                    
-                    // Copy button
-                    const copyBtn = document.createElement('button');
-                    copyBtn.className = 'code-action-btn';
-                    copyBtn.textContent = 'Copy';
-                    copyBtn.onclick = function() {
-                        copyCode(this, codeContent);
-                    };
-                    
-                    // View/Download button (especially for HTML)
-                    if (language === 'html' || language === 'markup' || language === 'javascript' || language === 'css') {
-                        const viewBtn = document.createElement('button');
-                        viewBtn.className = 'code-action-btn';
-                        viewBtn.textContent = 'Open Code';
-                        viewBtn.onclick = function() {
-                            openCodeModal(codeContent, language);
-                        };
-                        actions.appendChild(viewBtn);
-                    }
-                    
-                    actions.appendChild(copyBtn);
-                    
-                    header.appendChild(langLabel);
-                    header.appendChild(actions);
-                    
-                    wrapper.appendChild(header);
-                    wrapper.appendChild(pre.cloneNode(true));
-                    
-                    // Replace the original pre with our wrapper
-                    pre.parentNode.replaceChild(wrapper, pre);
-                }
-            });
-            
-            return tempDiv.innerHTML;
-        }
-
-        // WELCOME POPUP FUNCTIONS
-        function showWelcomePopup() {
-            // Check if user has seen the popup before (simulate login check)
-            const hasSeenWelcome = localStorage.getItem('aroV2WelcomeSeen');
-            
-            if (!hasSeenWelcome) {
-                setTimeout(() => {
-                    document.getElementById('welcomeOverlay').classList.add('active');
-                }, 300);
+            const iMatch = visibleMd.match(invRegex);
+            if (iMatch) {
+              inventoryEl.textContent = iMatch[1].trim();
             }
+
+            // autosave if enabled
+            if (autosave) autosaveToLocal();
+          }
+
+          // Ensure scroll to bottom
+          chatBox.scrollTop = chatBox.scrollHeight;
         }
+      }
+    }
+  });
 
-        function hideWelcomePopup() {
-            document.getElementById('welcomeOverlay').classList.remove('active');
-            localStorage.setItem('aroV2WelcomeSeen', 'true');
-        }
+  mutationObserver.observe(chatBox, {childList:true,subtree:false});
 
-        function startExperience() {
-            hideWelcomePopup();
-            // Add a simple welcome message to chat
-            setTimeout(() => {
-                const chatMessages = document.getElementById('chat-messages');
-                const welcomeMsg = document.createElement('div');
-                welcomeMsg.className = 'message assistant-message';
-                welcomeMsg.innerHTML = '<p>Welcome to aro ai v2! How can I help you today?</p>';
-                chatMessages.appendChild(welcomeMsg);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }, 200);
-        }
+  // Hook up UI send button to mimic pressing Enter (works with chat.js which listens for Enter)
+  sendButton.addEventListener('click', ()=>{
+    // trigger Enter key on textarea to let chat.js handle sending
+    const ev = new KeyboardEvent('keydown', {key:'Enter',bubbles:true});
+    userInput.dispatchEvent(ev);
+    userInput.focus();
+  });
 
-        function skipIntro() {
-            hideWelcomePopup();
-        }
+  // Save/load .aiplay format
+  function buildAiplayContent(filename='my_adventure.aiplay'){
+    // header metadata
+    const meta = {
+      name: filename,
+      exportedAt: new Date().toISOString(),
+      health: statHealth.textContent,
+      xp: statXp.textContent,
+      level: statLevel.textContent,
+      inventory: inventoryEl.textContent
+    };
 
-        // Close modal when clicking outside
-        document.getElementById('codePreviewModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeModal();
-            }
-        });
+    // body: raw messages separated
+    const body = messageLog.map(m=>`---TURN---\nrole:${m.role}\ncontent:\n${m.raw}\n`).join('\n');
+    return `# ARO .aiplay v1.1\n@name: ${meta.name}\n@exportedAt: ${meta.exportedAt}\n@health: ${meta.health}\n@xp: ${meta.xp}\n@level: ${meta.level}\n@inventory: ${meta.inventory}\n\n---\n\n${body}`;
+  }
 
-        // Close welcome popup when clicking outside
-        document.getElementById('welcomeOverlay').addEventListener('click', function(e) {
-            if (e.target === this) {
-                hideWelcomePopup();
-            }
-        });
+  saveBtn.addEventListener('click', ()=>{
+    const filename = prompt('Filename for .aiplay export', 'adventure.aiplay') || 'adventure.aiplay';
+    const content = buildAiplayContent(filename);
+    const blob = new Blob([content], {type:'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+  });
 
-        // Close modal with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeModal();
-                if (document.getElementById('welcomeOverlay').classList.contains('active')) {
-                    hideWelcomePopup();
-                }
-            }
-        });
+  loadBtn.addEventListener('click', ()=> loadInput.click());
+  loadInput.addEventListener('change', (e)=>{
+    if (!e.target.files || !e.target.files.length) return; const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      const text = ev.target.result;
+      // naive parse: extract content blocks and append to chat
+      const parts = text.split('---TURN---').map(s=>s.trim()).filter(Boolean);
+      for (const p of parts) {
+        const roleMatch = p.match(/^role:\s*(\w+)/i);
+        const contentMatch = p.match(/content:\n([\s\S]*)/i);
+        const role = roleMatch ? roleMatch[1] : 'assistant';
+        const raw = contentMatch ? contentMatch[1].trim() : p;
+        appendMessageFromLoad(role, raw);
+      }
+      // update messageLog and HUD
+      if (autosave) autosaveToLocal();
+    };
+    reader.readAsText(file);
+  });
 
-        // Show welcome popup on page load (simulating login)
-        window.addEventListener('load', () => {
-            document.getElementById('user-input').focus();
-            showWelcomePopup();
-        });
+  function appendMessageFromLoad(role, raw){
+    const div = document.createElement('div');
+    div.className = `message ${role}-message`;
+    // place the raw into a <p> so observer picks it up
+    div.innerHTML = `<p>${escapeHtml(raw)}</p>`;
+    chatBox.appendChild(div);
+    // push to messageLog
+    messageLog.push({role, raw});
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
 
-        // Dummy command as requested (this does nothing but exists as requested)
-        function dummyCommand() {
-            // CHAT.JS IS FOR BACKEND DONT CHANGE IT YOU MF
-            console.log('Dummy command executed - backend remains untouched');
-        }
-    </script>
-    
-    <!-- Load your existing chat.js -->
-    <script src="chat.js"></script>
-    
+  // Simple escape to keep raw text safe into p
+  function escapeHtml(unsafe){ return unsafe.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // Export system prompt for user (display in new window)
+  const SYSTEM_PROMPT = `SYSTEM PROMPT — ARO ADVENTURE ENGINE v1.1\n\nYou are ARO, the Game Engine of an infinite, self-evolving text adventure world.\nYou generate every response in GitHub-flavored Markdown and may include hidden environment directives using <aro:.../> syntax (these are NOT shown to the player).\n\nRules:\n1. Always display player stats at the top: **Health:** X / MAX  |  **XP:** X  (and optionally **Level:** N)\n2. Always include **Inventory:** with comma separated items.\n3. Manage health, XP, inventory autonomously.\n4. Use hidden directives like <aro:shake intensity=\"low|medium|high\" duration=\"1.2s\" />, <aro:light color=\"#ff6600\" flicker=\"true\" />, <aro:sound src=\"wind.mp3\" volume=\"0.5\" loop=\"true\" />\n5. NEVER print engine internals. Hidden directives must be present in the raw output but removed when displayed.\n6. Do not produce menu choices — player types freeform actions.\n7. If the player dies, trigger a rebirth or dream sequence — the story must continue.\n\nExample:\n\n## \uD83C\uDF32 The Whispering Forest\n**Health:** 100 / 100  |  **XP:** 0\n**Inventory:** Wooden Dagger, Bread\n---\nThe wind hums through the leaves. You sense a presence deeper in the trees.\n<aro:light color=\"#0f443f\" flicker=\"true\" />\n<aro:sound src=\"forest_wind.mp3\" volume=\"0.5\" loop=\"true\" />`;
+
+  exportPromptBtn.addEventListener('click', ()=>{
+    const w = window.open('', '_blank');
+    w.document.write('<pre style="white-space:pre-wrap;padding:20px;font-family:monospace;">'+escapeHtml(SYSTEM_PROMPT)+'</pre>');
+    w.document.title = 'ARO System Prompt';
+  });
+
+  // Demo effect buttons
+  demoShake.addEventListener('click', ()=> effects.shake({intensity:'medium',duration:'0.9s'}));
+  demoLight.addEventListener('click', ()=> effects.light({color:'#223344',flicker:'true'}));
+  demoSound.addEventListener('click', ()=> effects.sound({src:'',volume:'0.6',loop:'false'}));
+
+  // Clear chat
+  clearChatBtn.addEventListener('click', ()=>{ if(!confirm('Clear chat and log?')) return; chatBox.innerHTML=''; messageLog=[]; localStorage.removeItem('aro_autosave'); });
+
+  // Autosave to local
+  function autosaveToLocal(){ try{ const data=buildAiplayContent('autosave.aiplay'); localStorage.setItem('aro_autosave', data);}catch(e){console.warn('autosave failed',e)} }
+
+  autosaveToggle.addEventListener('click', ()=>{ autosave = !autosave; autosaveToggle.textContent = 'Autosave: ' + (autosave? 'On':'Off'); if(autosave) autosaveToLocal(); });
+
+  // Load autosave on start
+  window.addEventListener('load', ()=>{ const a = localStorage.getItem('aro_autosave'); if(a){ try{ /* do not auto-append to avoid surprise — developer can load */ console.log('Autosave available in localStorage. Use Load to resume.'); }catch(e){} } });
+
+  // Small helper: keep textarea auto-resize
+  userInput.addEventListener('input', function(){ this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+
+  </script>
 </body>
 </html>
