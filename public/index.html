@@ -1,124 +1,191 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Cloudflare AI — Markdown Editor</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cloudflare AI Document Editor</title>
   <style>
-    body {background:#e0e0e0;font-family:Inter,sans-serif;color:#222;display:flex;align-items:center;justify-content:center;padding:28px;margin:0;}
-    .app {width:1000px;max-width:95%;display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,0.35),rgba(255,255,255,0.18));box-shadow:18px 18px 34px rgba(0,0,0,0.14),-12px -12px 34px rgba(255,255,255,0.9);backdrop-filter:blur(6px) saturate(120%);}
-    .panel{padding:16px;border-radius:16px;background:linear-gradient(180deg,#e6e6e6,rgba(255,255,255,0.6));box-shadow:8px 8px 18px rgba(0,0,0,0.06),-6px -6px 12px rgba(255,255,255,0.8);overflow:auto;}
-    .editor-area{background:linear-gradient(180deg,rgba(255,255,255,0.55),rgba(250,250,250,0.6));border-radius:12px;padding:12px;min-height:400px;box-shadow:inset 6px 6px 16px rgba(0,0,0,0.03),inset -6px -6px 16px rgba(255,255,255,0.7);}
-    .doc{outline:none;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,monospace;min-height:380px;color:#222;}
-    .floating-action{position:absolute;display:none;z-index:40;transform:translate(-50%,-120%);background:linear-gradient(180deg,rgba(255,255,255,0.85),rgba(250,250,250,0.8));padding:8px 10px;border-radius:12px;box-shadow:6px 6px 16px rgba(0,0,0,0.08),-4px -4px 12px rgba(255,255,255,0.9);}
-    .btn{background:linear-gradient(180deg,rgba(255,255,255,0.6),rgba(245,245,245,0.6));border:none;padding:8px 12px;border-radius:12px;cursor:pointer;box-shadow:4px 4px 10px rgba(0,0,0,0.06),-3px -3px 8px rgba(255,255,255,0.8);}
-    .btn:active{transform:translateY(2px);box-shadow:inset 4px 4px 10px rgba(0,0,0,0.06),inset -3px -3px 8px rgba(255,255,255,0.8);}
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .editor-container {
+      width: 90%;
+      max-width: 1000px;
+      height: 90vh;
+      background: #e0e0e0;
+      border-radius: 20px;
+      box-shadow: 8px 8px 16px #bebebe, -8px -8px 16px #ffffff;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .toolbar {
+      padding: 10px 20px;
+      background: #e0e0e0;
+      box-shadow: inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .toolbar button {
+      border: none;
+      background: #e0e0e0;
+      box-shadow: 3px 3px 6px #bebebe, -3px -3px 6px #ffffff;
+      border-radius: 12px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+    .toolbar button:active {
+      box-shadow: inset 3px 3px 6px #bebebe, inset -3px -3px 6px #ffffff;
+    }
+    #editor {
+      flex: 1;
+      padding: 20px;
+      background: #e0e0e0;
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: monospace;
+      font-size: 16px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .highlight-menu {
+      position: absolute;
+      background: #e0e0e0;
+      box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff;
+      border-radius: 12px;
+      padding: 8px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 10;
+    }
+    .highlight-menu button {
+      background: none;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      color: #333;
+    }
+    .popup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #e0e0e0;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 8px 8px 16px #bebebe, -8px -8px 16px #ffffff;
+      z-index: 100;
+      width: 400px;
+      text-align: center;
+    }
+    .popup input, .popup button {
+      margin-top: 10px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 12px;
+      border: none;
+      background: #e0e0e0;
+      box-shadow: 3px 3px 6px #bebebe, -3px -3px 6px #ffffff;
+    }
+    .popup button:active {
+      box-shadow: inset 3px 3px 6px #bebebe, inset -3px -3px 6px #ffffff;
+    }
   </style>
 </head>
 <body>
-  <div class="app">
-    <section class="panel editor">
-      <div class="editor-area">
-        <div id="doc" class="doc" contenteditable="true"># Start writing here...</div>
-      </div>
-    </section>
-    <section class="panel preview">
-      <div id="preview"></div>
-    </section>
-    <div id="floatingAction" class="floating-action">
-      <span>AI write</span>
-      <button class="btn" id="aiWriteBtn">✦</button>
+  <div class="editor-container">
+    <div class="toolbar">
+      <h3>Cloudflare AI Document Editor</h3>
+      <button onclick="saveDoc()">Save</button>
     </div>
+    <textarea id="editor" placeholder="Write your markdown or notes here..."></textarea>
   </div>
 
-  <div id="modalBackdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;">
-    <div style="background:white;padding:16px;border-radius:10px;width:400px;">
-      <h3>AI — Edit Selected Text</h3>
-      <textarea id="aiPrompt" style="width:100%;height:120px;"></textarea>
-      <div style="text-align:right;margin-top:10px;">
-        <button class="btn" id="modalCancel">Cancel</button>
-        <button class="btn" id="modalGenerate">Generate</button>
-      </div>
-    </div>
+  <div class="highlight-menu" id="highlightMenu">
+    <button onclick="openAIPopup()">AI Write ✨</button>
+  </div>
+
+  <div class="popup" id="aiPopup">
+    <h3>AI Assistant</h3>
+    <input type="text" id="aiPrompt" placeholder="Describe what you want..." />
+    <button onclick="generateAI()">Generate</button>
+    <button onclick="closeAIPopup()">Close</button>
   </div>
 
   <script>
-    const doc=document.getElementById('doc'),preview=document.getElementById('preview'),floatingAction=document.getElementById('floatingAction'),aiWriteBtn=document.getElementById('aiWriteBtn'),modal=document.getElementById('modalBackdrop'),aiPrompt=document.getElementById('aiPrompt'),modalGenerate=document.getElementById('modalGenerate'),modalCancel=document.getElementById('modalCancel');
-    let currentSelectionRange=null;
+    const editor = document.getElementById('editor');
+    const menu = document.getElementById('highlightMenu');
+    const popup = document.getElementById('aiPopup');
+    let selectedText = '';
 
-    function renderPreview(){preview.innerHTML=marked.parse(doc.innerText);Prism.highlightAllUnder(preview);}
-    renderPreview();
-    doc.addEventListener('input',renderPreview);
-
-    function showFloatingAtRange(r){const b=r.getBoundingClientRect();floatingAction.style.left=(b.left+b.width/2)+'px';floatingAction.style.top=b.top+'px';floatingAction.style.display='flex';}
-    function clearFloating(){floatingAction.style.display='none';currentSelectionRange=null;}
-    function selectionHandler(){setTimeout(()=>{const s=window.getSelection();if(!s||!s.rangeCount){clearFloating();return;}const r=s.getRangeAt(0);if(s.toString().trim()&&doc.contains(r.commonAncestorContainer)){currentSelectionRange=r.cloneRange();showFloatingAtRange(r);}else{clearFloating();}},10);}
-    doc.addEventListener('mouseup',selectionHandler);
-    doc.addEventListener('keyup',selectionHandler);
-
-    aiWriteBtn.addEventListener('click',()=>{modal.style.display='flex';aiPrompt.focus();});
-    modalCancel.addEventListener('click',()=>{modal.style.display='none';});
-
-    modalGenerate.addEventListener('click',async()=>{
-      const instruction=aiPrompt.value.trim();
-      if(!currentSelectionRange){alert('No text selected');return;}
-      const selectedText=currentSelectionRange.toString();
-      modalGenerate.textContent='Generating…';
-
-      try{
-        const response=await fetch('/api/chat',{
-          method:'POST',
-          headers:{'Content-Type':'application/json','Accept':'text/plain'},
-          body:JSON.stringify({
-            messages:[
-              {role:'system',content:'You are a helpful writing assistant for markdown documents.'},
-              {role:'user',content:`Instruction: ${instruction}\nSelected text: ${selectedText}`}
-            ],
-            stream:true
-          })
-        });
-
-        if(!response.ok) throw new Error('HTTP '+response.status);
-
-        const reader=response.body.getReader();
-        const decoder=new TextDecoder();
-        let aiOutput='';
-        while(true){
-          const {done,value}=await reader.read();
-          if(done) break;
-          const chunk=decoder.decode(value,{stream:true});
-          const lines=chunk.split('\\n');
-          for(const line of lines){
-            if(line.trim().startsWith('data: ')){
-              const jsonStr=line.slice(6);
-              if(jsonStr==='[DONE]') break;
-              try{
-                const data=JSON.parse(jsonStr);
-                let text=data.response||data.choices?.[0]?.delta?.content||data.content||'';
-                aiOutput+=text;
-              }catch{aiOutput+=jsonStr;}
-            }
-          }
-        }
-
-        if(!aiOutput.trim()) aiOutput='⚠️ AI returned empty output. Check backend.';
-        currentSelectionRange.deleteContents();
-        currentSelectionRange.insertNode(document.createTextNode(aiOutput));
-        renderPreview();
-
-      }catch(e){
-        alert('Error contacting AI: '+e.message);
-      }finally{
-        modalGenerate.textContent='Generate';
-        modal.style.display='none';
+    editor.addEventListener('mouseup', (e) => {
+      const sel = window.getSelection().toString();
+      if (sel.length > 0) {
+        selectedText = sel;
+        const rect = window.getSelection().getRangeAt(0).getBoundingClientRect();
+        menu.style.left = rect.left + window.scrollX + 'px';
+        menu.style.top = rect.top + window.scrollY - 40 + 'px';
+        menu.style.display = 'flex';
+      } else {
+        menu.style.display = 'none';
       }
     });
+
+    function openAIPopup() {
+      popup.style.display = 'block';
+      menu.style.display = 'none';
+    }
+
+    function closeAIPopup() {
+      popup.style.display = 'none';
+    }
+
+    async function generateAI() {
+      const prompt = document.getElementById('aiPrompt').value;
+      popup.style.display = 'none';
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: 'You are an AI writing assistant that helps edit and improve markdown documents.' },
+            { role: 'user', content: `Instruction: ${prompt}\n\nSelected text: ${selectedText}` }
+          ]
+        })
+      });
+
+      const data = await response.json();
+      const output = data.response || data.output || data.result || '';
+      if (!output) {
+        alert('AI returned empty output.');
+        return;
+      }
+
+      editor.value = editor.value.replace(selectedText, output);
+    }
+
+    function saveDoc() {
+      const blob = new Blob([editor.value], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'document.md';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   </script>
 
-  <!-- Load your existing Cloudflare AI chat logic -->
   <script src="chat.js"></script>
 </body>
 </html>
