@@ -1,388 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>ARO — Infinite AI Adventure</title>
-
-  <!-- Markdown + Syntax highlighting -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARO Adventure</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-
   <style>
-    /* Minimal, professional dark UI */
-    :root{--bg:#0f1113;--panel:#121314;--muted:#9aa3ad;--accent:#7c5cff;--glass:rgba(255,255,255,0.03)}
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,'Helvetica Neue',Arial; background:var(--bg); color:#e6eef6}
-    .wrap{width:1024px;max-width:calc(100% - 24px);height:86vh;margin:24px auto;border-radius:12px;overflow:hidden;display:flex;box-shadow:0 12px 40px rgba(0,0,0,0.6)}
-    .left{width:64%;background:linear-gradient(180deg,#0f1113,#121318);display:flex;flex-direction:column;border-right:1px solid rgba(255,255,255,0.03)}
-    .right{width:36%;background:linear-gradient(180deg,#0c0d0f,#0f1113);padding:18px;display:flex;flex-direction:column;gap:12px}
-
-    .header{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:space-between}
-    .brand{font-weight:600;letter-spacing:0.6px}
-    .status{color:var(--muted);font-size:12px}
-
-    #chat-messages{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
-    .message{max-width:78%;white-space:pre-wrap;line-height:1.45}
-    .user-message{align-self:flex-end;background:linear-gradient(180deg,#1b1b1c,#161616);padding:10px 14px;border-radius:10px 10px 6px 10px;color:#dbe7ff}
-    .assistant-message{align-self:flex-start;background:transparent;padding:0}
-    .assistant-message .md{background:linear-gradient(180deg,#0f1315,#0a0c0d);padding:12px;border-radius:10px;color:#e6eef6;border:1px solid rgba(255,255,255,0.03)}
-
-    .input-area{padding:14px;border-top:1px solid rgba(255,255,255,0.02);display:flex;gap:12px;align-items:center}
-    textarea#user-input{flex:1;min-height:38px;max-height:140px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:var(--panel);color:#e6eef6;outline:none;resize:none}
-    button#send-button{background:var(--accent);border:none;color:white;padding:10px 14px;border-radius:8px;cursor:pointer}
-
-    /* HUD on right */
-    .panel{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
-    .hud-row{display:flex;justify-content:space-between;align-items:center;padding:8px 6px}
-    .hud-row strong{font-size:13px}
-    .inventory{min-height:64px;overflow:auto;padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.02);background:var(--glass)}
-
-    .controls{display:flex;gap:8px;flex-wrap:wrap}
-    .btn{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:#d7e2f2;cursor:pointer}
-    .btn.ghost{background:transparent}
-
-    .small{font-size:12px;color:var(--muted)}
-
-    /* code block UI actions (copied from user's UI concept) */
-    .code-actions{display:flex;gap:8px;margin-top:8px}
-
-    @media (max-width:900px){.wrap{flex-direction:column;height:92vh}.left,.right{width:100%}.right{order:2}}
+    body {
+      background-color: #0e0e10;
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #chat-box {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .user-message, .assistant-message {
+      padding: 10px 14px;
+      border-radius: 8px;
+      max-width: 70%;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+    .user-message {
+      background-color: #1f1f22;
+      align-self: flex-end;
+      color: #c7d2fe;
+    }
+    .assistant-message {
+      background-color: #141416;
+      border: 1px solid #27272a;
+      align-self: flex-start;
+    }
+    #input-area {
+      display: flex;
+      padding: 10px;
+      background-color: #18181b;
+      border-top: 1px solid #27272a;
+    }
+    #user-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 15px;
+      padding: 8px;
+      outline: none;
+    }
+    #send-btn {
+      background-color: #4f46e5;
+      border: none;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    #send-btn:hover { background-color: #6366f1; }
+    .hud {
+      display: flex;
+      justify-content: space-around;
+      background-color: #18181b;
+      border-top: 1px solid #27272a;
+      padding: 10px;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="left">
-      <div class="header">
-        <div class="brand">ARO — Infinite AI Adventure</div>
-        <div class="status">Mode: <span id="status-text">adventure</span></div>
-      </div>
-
-      <div id="chat-messages">
-        <div class="message assistant-message">
-          <div class="md">
-            <strong>Welcome to ARO.</strong>
-            <p>Type anything to begin your adventure. The AI will manage health, XP and inventory automatically. Hidden environment commands (<code>&lt;aro:.../&gt;</code>) may run effects without appearing to the player.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="input-area">
-        <textarea id="user-input" placeholder="Type an action (e.g., 'sneak past the sentry')"></textarea>
-        <button id="send-button">Send</button>
-      </div>
-    </div>
-
-    <aside class="right">
-      <div class="panel">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><strong>Player HUD</strong><div class="small">Live stats parsed from AI output</div></div>
-          <div class="small">v1.1</div>
-        </div>
-
-        <div class="hud-row"><strong>❤️ Health</strong><div id="stat-health">100 / 100</div></div>
-        <div class="hud-row"><strong>⭐ XP</strong><div id="stat-xp">0</div></div>
-        <div class="hud-row"><strong>🔰 Level</strong><div id="stat-level">1</div></div>
-        <div style="margin-top:8px"><strong>🎒 Inventory</strong></div>
-        <div class="inventory" id="inventory-items">None</div>
-
-        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
-          <button class="btn" id="save-btn">💾 Save (.aiplay)</button>
-          <input id="load-input" type="file" accept=".aiplay" style="display:none" />
-          <button class="btn" id="load-btn">📂 Load (.aiplay)</button>
-          <button class="btn" id="export-prompt">🧾 System Prompt</button>
-        </div>
-
-        <div style="margin-top:12px">
-          <div class="small">Hidden Effects Demo: animations, shakes, ambient audio & visual tweaks.</div>
-          <div class="code-actions">
-            <button class="btn" id="demo-shake">Demo Shake</button>
-            <button class="btn" id="demo-light">Demo Light</button>
-            <button class="btn" id="demo-sound">Demo Sound</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel" style="margin-top:12px">
-        <strong>Controls</strong>
-        <div class="small" style="margin-top:8px">Quick tools to assist development.</div>
-        <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn" id="clear-chat">Clear Chat</button>
-          <button class="btn" id="autosave-toggle">Autosave: On</button>
-        </div>
-      </div>
-
-      <div class="panel" style="margin-top:12px">
-        <strong>Notes</strong>
-        <div class="small" style="margin-top:8px">This page expects <code>chat.js</code> (your backend streaming client) to be present and unmodified. It augments the UI, parses AI Markdown + hidden &lt;aro:.../&gt; directives, and exposes Save/Load for <code>.aiplay</code> files.</div>
-      </div>
-    </aside>
+  <div id="chat-box">
+    <div class="assistant-message">Welcome to ARO — your AI-powered infinite text adventure! Type anything to begin.</div>
+  </div>
+  <div class="hud">
+    <div>❤️ Health: <span id="health">100</span></div>
+    <div>⭐ XP: <span id="xp">0</span></div>
+    <div>🎒 Inventory: <span id="inventory">None</span></div>
+  </div>
+  <div id="input-area">
+    <input id="user-input" placeholder="Type your next move..." />
+    <button id="send-btn">Send</button>
   </div>
 
-  <!-- Your backend chat client (must exist in same folder) -->
   <script src="chat.js"></script>
-
   <script>
-  /*
-    Frontend integration script.
-    - Observes new messages, renders Markdown, strips and processes <aro:.../> hidden commands
-    - Maintains a simple message log (raw) for .aiplay export/import
-    - Updates HUD (health/xp/inventory/level) by parsing AI output
-    - Lightweight effects engine (shake, light, animate, sound)
-  */
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const healthEl = document.getElementById('health');
+    const xpEl = document.getElementById('xp');
+    const inventoryEl = document.getElementById('inventory');
 
-  // Markdown rendering config
-  marked.setOptions({gfm:true,breaks:true});
+    const parser = new DOMParser();
 
-  const chatBox = document.getElementById('chat-messages');
-  const userInput = document.getElementById('user-input');
-  const sendButton = document.getElementById('send-button');
-  const saveBtn = document.getElementById('save-btn');
-  const loadBtn = document.getElementById('load-btn');
-  const loadInput = document.getElementById('load-input');
-  const exportPromptBtn = document.getElementById('export-prompt');
-  const demoShake = document.getElementById('demo-shake');
-  const demoLight = document.getElementById('demo-light');
-  const demoSound = document.getElementById('demo-sound');
-  const clearChatBtn = document.getElementById('clear-chat');
-  const autosaveToggle = document.getElementById('autosave-toggle');
+    // Observe incoming messages from chat.js
+    const observer = new MutationObserver(() => {
+      const lastMsg = chatBox.lastElementChild;
+      if (lastMsg && lastMsg.classList.contains('assistant-message')) {
+        const text = lastMsg.innerText;
+        updateStats(text);
+        runAroCommands(text);
+      }
+    });
+    observer.observe(chatBox, { childList: true });
 
-  const statHealth = document.getElementById('stat-health');
-  const statXp = document.getElementById('stat-xp');
-  const statLevel = document.getElementById('stat-level');
-  const inventoryEl = document.getElementById('inventory-items');
-
-  // Message log stores raw text (including hidden commands) and role
-  let messageLog = [];
-  let autosave = true;
-
-  // Basic effects engine
-  const effects = {
-    shake: (opts={}) => {
-      const intensity = {low:6,medium:12,high:22}[opts.intensity] || 8;
-      const duration = (parseFloat(opts.duration)||1.2) * 1000;
-      const el = document.querySelector('.wrap');
-      const start = Date.now();
-      const orig = el.style.transform || '';
-      const tick = () => {
-        const now = Date.now();
-        if (now - start > duration) { el.style.transform = orig; return; }
-        const x = (Math.random() - 0.5) * intensity;
-        const y = (Math.random() - 0.5) * intensity;
-        el.style.transform = `translate(${x}px, ${y}px)`;
-        requestAnimationFrame(tick);
-      };
-      tick();
-    },
-    light: (opts={}) => {
-      const color = opts.color || '#111111';
-      const flicker = opts.flicker === 'true';
-      const body = document.body;
-      const orig = body.style.background;
-      if (!flicker) { body.style.background = color; setTimeout(()=>body.style.background=orig, 2500); return; }
-      let on = true;
-      const interval = setInterval(()=>{
-        body.style.background = on ? color : orig;
-        on = !on;
-      }, 180);
-      setTimeout(()=>{ clearInterval(interval); body.style.background = orig; }, 3000);
-    },
-    animate: (opts={}) => {
-      // placeholder: you can map effects to CSS classes or particles
-      console.log('animate', opts);
-    },
-    sound: (opts={}) => {
-      if (!opts.src) return;
-      try {
-        const audio = new Audio(opts.src);
-        audio.volume = parseFloat(opts.volume)||0.5;
-        audio.loop = opts.loop === 'true';
-        audio.play().catch(()=>console.warn('Autoplay prevented - user gesture required'));
-        // store reference if you want to stop later
-      } catch(e){console.warn('sound error', e)}
+    function updateStats(text) {
+      const healthMatch = text.match(/\*\*Health:\*\*\s*(\d+)/);
+      const xpMatch = text.match(/\*\*XP:\*\*\s*(\d+)/);
+      const invMatch = text.match(/\*\*Inventory:\*\*\s*(.*)/);
+      if (healthMatch) healthEl.textContent = healthMatch[1];
+      if (xpMatch) xpEl.textContent = xpMatch[1];
+      if (invMatch) inventoryEl.textContent = invMatch[1];
     }
-  };
 
-  // Regex helpers
-  const aroRegex = /<aro:(\w+)([^>]*)\/>/g;
-  const attrRegex = /(\w+)="([^"]*)"/g;
-  const statRegex = /\*\*Health:\*\*\s*(\d+)\s*\/\s*(\d+)[\s\S]*?\*\*XP:\*\*\s*(\d+)/i;
-  const invRegex = /\*\*Inventory:\*\*\s*([^\n\r]+)/i;
-  const lvlRegex = /\*\*Level:\*\*\s*(\d+)/i;
-
-  // Observe chat DOM for new messages
-  const mutationObserver = new MutationObserver((mutations)=>{
-    for (const m of mutations) {
-      for (const node of m.addedNodes) {
-        if (!(node instanceof HTMLElement)) continue;
-        if (node.classList.contains('message')) {
-          // determine role
-          const role = node.classList.contains('user-message') ? 'user' : 'assistant';
-          // get raw text (before rendering)
-          const p = node.querySelector('p');
-          let raw = '';
-          if (p) raw = p.textContent || p.innerText || '';
-          else raw = node.innerText || node.textContent || '';
-
-          // Push to message log
-          messageLog.push({role, raw});
-
-          // If assistant, render markdown and process hidden commands
-          if (role === 'assistant') {
-            // process hidden <aro:.../> commands from raw
-            const commands = [];
-            let match;
-            while ((match = aroRegex.exec(raw)) !== null) {
-              const cmd = match[1];
-              const paramsStr = match[2] || '';
-              const params = {};
-              let m2;
-              while ((m2 = attrRegex.exec(paramsStr)) !== null) params[m2[1]] = m2[2];
-              commands.push({cmd, params});
-            }
-
-            // Run effects for each command
-            commands.forEach(c=>{ if (effects[c.cmd]) effects[c.cmd](c.params); });
-
-            // Remove the hidden tags from visible markdown
-            const visibleMd = raw.replace(aroRegex, '').trim();
-
-            // Render Markdown safely
-            const mdHtml = marked.parse(visibleMd);
-
-            // Wrap into styled container
-            node.innerHTML = `<div class="md">${mdHtml}</div>`;
-
-            // After rendering, syntax highlight code blocks
-            node.querySelectorAll('pre code').forEach((el)=>{ try{ Prism.highlightElement(el);}catch(e){}});
-
-            // Update HUD (stats + inventory)
-            const textForStats = visibleMd;
-            const sMatch = textForStats.match(statRegex);
-            if (sMatch) {
-              statHealth.textContent = `${sMatch[1]} / ${sMatch[2]}`;
-              statXp.textContent = sMatch[3];
-              // derive level from xp
-              const lvl = Math.max(1, Math.floor(parseInt(sMatch[3],10)/200) + 1);
-              statLevel.textContent = lvl;
-            }
-            const iMatch = visibleMd.match(invRegex);
-            if (iMatch) {
-              inventoryEl.textContent = iMatch[1].trim();
-            }
-
-            // autosave if enabled
-            if (autosave) autosaveToLocal();
-          }
-
-          // Ensure scroll to bottom
-          chatBox.scrollTop = chatBox.scrollHeight;
-        }
+    function runAroCommands(text) {
+      const matches = text.matchAll(/<aro:(.*?)\s*(.*?)\/>/g);
+      for (const match of matches) {
+        const cmd = match[1];
+        const args = match[2];
+        if (cmd === 'shake') doShake();
+        if (cmd === 'light') flashLight();
+        if (cmd === 'sound') playSound(args.match(/src="(.*?)"/)[1]);
       }
     }
-  });
 
-  mutationObserver.observe(chatBox, {childList:true,subtree:false});
+    function doShake() {
+      document.body.style.transition = 'transform 0.1s';
+      let i = 0;
+      const shake = setInterval(() => {
+        document.body.style.transform = `translate(${(Math.random()-0.5)*10}px, ${(Math.random()-0.5)*10}px)`;
+        if (++i > 10) { clearInterval(shake); document.body.style.transform = ''; }
+      }, 50);
+    }
 
-  // Hook up UI send button to mimic pressing Enter (works with chat.js which listens for Enter)
-  sendButton.addEventListener('click', ()=>{
-    // trigger Enter key on textarea to let chat.js handle sending
-    const ev = new KeyboardEvent('keydown', {key:'Enter',bubbles:true});
-    userInput.dispatchEvent(ev);
-    userInput.focus();
-  });
+    function flashLight() {
+      const orig = document.body.style.backgroundColor;
+      document.body.style.backgroundColor = '#fbbf24';
+      setTimeout(() => document.body.style.backgroundColor = orig || '#0e0e10', 300);
+    }
 
-  // Save/load .aiplay format
-  function buildAiplayContent(filename='my_adventure.aiplay'){
-    // header metadata
-    const meta = {
-      name: filename,
-      exportedAt: new Date().toISOString(),
-      health: statHealth.textContent,
-      xp: statXp.textContent,
-      level: statLevel.textContent,
-      inventory: inventoryEl.textContent
-    };
-
-    // body: raw messages separated
-    const body = messageLog.map(m=>`---TURN---\nrole:${m.role}\ncontent:\n${m.raw}\n`).join('\n');
-    return `# ARO .aiplay v1.1\n@name: ${meta.name}\n@exportedAt: ${meta.exportedAt}\n@health: ${meta.health}\n@xp: ${meta.xp}\n@level: ${meta.level}\n@inventory: ${meta.inventory}\n\n---\n\n${body}`;
-  }
-
-  saveBtn.addEventListener('click', ()=>{
-    const filename = prompt('Filename for .aiplay export', 'adventure.aiplay') || 'adventure.aiplay';
-    const content = buildAiplayContent(filename);
-    const blob = new Blob([content], {type:'text/plain'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
-  });
-
-  loadBtn.addEventListener('click', ()=> loadInput.click());
-  loadInput.addEventListener('change', (e)=>{
-    if (!e.target.files || !e.target.files.length) return; const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = (ev)=>{
-      const text = ev.target.result;
-      // naive parse: extract content blocks and append to chat
-      const parts = text.split('---TURN---').map(s=>s.trim()).filter(Boolean);
-      for (const p of parts) {
-        const roleMatch = p.match(/^role:\s*(\w+)/i);
-        const contentMatch = p.match(/content:\n([\s\S]*)/i);
-        const role = roleMatch ? roleMatch[1] : 'assistant';
-        const raw = contentMatch ? contentMatch[1].trim() : p;
-        appendMessageFromLoad(role, raw);
-      }
-      // update messageLog and HUD
-      if (autosave) autosaveToLocal();
-    };
-    reader.readAsText(file);
-  });
-
-  function appendMessageFromLoad(role, raw){
-    const div = document.createElement('div');
-    div.className = `message ${role}-message`;
-    // place the raw into a <p> so observer picks it up
-    div.innerHTML = `<p>${escapeHtml(raw)}</p>`;
-    chatBox.appendChild(div);
-    // push to messageLog
-    messageLog.push({role, raw});
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-
-  // Simple escape to keep raw text safe into p
-  function escapeHtml(unsafe){ return unsafe.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-  // Export system prompt for user (display in new window)
-  const SYSTEM_PROMPT = `SYSTEM PROMPT — ARO ADVENTURE ENGINE v1.1\n\nYou are ARO, the Game Engine of an infinite, self-evolving text adventure world.\nYou generate every response in GitHub-flavored Markdown and may include hidden environment directives using <aro:.../> syntax (these are NOT shown to the player).\n\nRules:\n1. Always display player stats at the top: **Health:** X / MAX  |  **XP:** X  (and optionally **Level:** N)\n2. Always include **Inventory:** with comma separated items.\n3. Manage health, XP, inventory autonomously.\n4. Use hidden directives like <aro:shake intensity=\"low|medium|high\" duration=\"1.2s\" />, <aro:light color=\"#ff6600\" flicker=\"true\" />, <aro:sound src=\"wind.mp3\" volume=\"0.5\" loop=\"true\" />\n5. NEVER print engine internals. Hidden directives must be present in the raw output but removed when displayed.\n6. Do not produce menu choices — player types freeform actions.\n7. If the player dies, trigger a rebirth or dream sequence — the story must continue.\n\nExample:\n\n## \uD83C\uDF32 The Whispering Forest\n**Health:** 100 / 100  |  **XP:** 0\n**Inventory:** Wooden Dagger, Bread\n---\nThe wind hums through the leaves. You sense a presence deeper in the trees.\n<aro:light color=\"#0f443f\" flicker=\"true\" />\n<aro:sound src=\"forest_wind.mp3\" volume=\"0.5\" loop=\"true\" />`;
-
-  exportPromptBtn.addEventListener('click', ()=>{
-    const w = window.open('', '_blank');
-    w.document.write('<pre style="white-space:pre-wrap;padding:20px;font-family:monospace;">'+escapeHtml(SYSTEM_PROMPT)+'</pre>');
-    w.document.title = 'ARO System Prompt';
-  });
-
-  // Demo effect buttons
-  demoShake.addEventListener('click', ()=> effects.shake({intensity:'medium',duration:'0.9s'}));
-  demoLight.addEventListener('click', ()=> effects.light({color:'#223344',flicker:'true'}));
-  demoSound.addEventListener('click', ()=> effects.sound({src:'',volume:'0.6',loop:'false'}));
-
-  // Clear chat
-  clearChatBtn.addEventListener('click', ()=>{ if(!confirm('Clear chat and log?')) return; chatBox.innerHTML=''; messageLog=[]; localStorage.removeItem('aro_autosave'); });
-
-  // Autosave to local
-  function autosaveToLocal(){ try{ const data=buildAiplayContent('autosave.aiplay'); localStorage.setItem('aro_autosave', data);}catch(e){console.warn('autosave failed',e)} }
-
-  autosaveToggle.addEventListener('click', ()=>{ autosave = !autosave; autosaveToggle.textContent = 'Autosave: ' + (autosave? 'On':'Off'); if(autosave) autosaveToLocal(); });
-
-  // Load autosave on start
-  window.addEventListener('load', ()=>{ const a = localStorage.getItem('aro_autosave'); if(a){ try{ /* do not auto-append to avoid surprise — developer can load */ console.log('Autosave available in localStorage. Use Load to resume.'); }catch(e){} } });
-
-  // Small helper: keep textarea auto-resize
-  userInput.addEventListener('input', function(){ this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
-
+    function playSound(src) {
+      if (!src) return;
+      const audio = new Audio(src);
+      audio.volume = 0.5;
+      audio.play();
+    }
   </script>
 </body>
 </html>
