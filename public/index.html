@@ -1,159 +1,665 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARO Adventure</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cloudflare AI — Notion-style Markdown Editor (Neumorphic)</title>
+
+  <!-- Markdown parser & syntax highlighter -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+
   <style>
-    body {
-      background-color: #0e0e10;
-      color: #e0e0e0;
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+    :root{
+      --bg: #e0e0e0;
+      --surface: #e6e6e6;
+      --muted:#9b9b9b;
+      --text:#222;
+      --glass: rgba(255,255,255,0.6);
+      --shadow-dark: rgba(0,0,0,0.14);
+      --shadow-light: rgba(255,255,255,0.9);
+      --accent: #2e2e2e;
+      --radius:16px;
+      --soft: 12px;
     }
-    #chat-box {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+
+    /* Page */
+    html,body{height:100%;}
+    body{
+      margin:0;
+      height:100%;
+      background:var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:28px;
     }
-    .user-message, .assistant-message {
-      padding: 10px 14px;
-      border-radius: 8px;
-      max-width: 70%;
-      white-space: pre-wrap;
-      line-height: 1.4;
+
+    /* Container */
+    .app {
+      width: 1100px;
+      max-width: calc(100% - 56px);
+      height: 720px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      padding: 28px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0.18));
+      box-shadow:
+        18px 18px 34px var(--shadow-dark),
+        -12px -12px 34px var(--shadow-light);
+      position:relative;
+      overflow:hidden;
+      align-items:stretch;
+      backdrop-filter: blur(6px) saturate(120%);
     }
-    .user-message {
-      background-color: #1f1f22;
-      align-self: flex-end;
-      color: #c7d2fe;
+
+    /* Header inside container */
+    .app-top {
+      grid-column: 1 / -1;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:6px;
     }
-    .assistant-message {
-      background-color: #141416;
-      border: 1px solid #27272a;
-      align-self: flex-start;
+
+    .brand {
+      display:flex;
+      gap:12px;
+      align-items:center;
     }
-    #input-area {
-      display: flex;
-      padding: 10px;
-      background-color: #18181b;
-      border-top: 1px solid #27272a;
+
+    .brand .logo {
+      width:44px;
+      height:44px;
+      border-radius:10px;
+      background: linear-gradient(180deg, #ffffff, #f0f0f0);
+      display:grid;
+      place-items:center;
+      font-weight:600;
+      color:var(--accent);
+      box-shadow: 6px 6px 14px rgba(0,0,0,0.08), -6px -6px 14px rgba(255,255,255,0.9);
+      border: 1px solid rgba(255,255,255,0.6);
     }
-    #user-input {
-      flex: 1;
+
+    .brand h1 {
+      font-size:18px;
+      margin:0;
+      font-weight:600;
+      color:var(--accent);
+      letter-spacing:-0.2px;
+    }
+
+    .brand p {margin:0;font-size:12px;color:var(--muted);}
+
+    /* Panels */
+    .panel {
+      border-radius: var(--radius);
+      padding: 18px;
+      background: linear-gradient(180deg, var(--surface), rgba(255,255,255,0.6));
+      box-shadow:
+        8px 8px 18px rgba(0,0,0,0.06),
+        -6px -6px 12px rgba(255,255,255,0.8);
+      overflow:auto;
+      min-height:0;
+    }
+
+    /* Left: editor */
+    .editor {
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .editor .toolbar{
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+
+    .btn {
+      background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(245,245,245,0.6));
+      border: none;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size:13px;
+      cursor:pointer;
+      box-shadow: 4px 4px 10px rgba(0,0,0,0.06), -3px -3px 8px rgba(255,255,255,0.8);
+      transition: transform .12s ease, box-shadow .12s ease;
+      color:var(--accent);
+    }
+
+    .btn:active{
+      transform: translateY(2px);
+      box-shadow: inset 4px 4px 10px rgba(0,0,0,0.06), inset -3px -3px 8px rgba(255,255,255,0.8);
+    }
+
+    .btn.ghost {
       background: transparent;
-      border: none;
-      color: #fff;
-      font-size: 15px;
-      padding: 8px;
-      outline: none;
+      border: 1px solid rgba(0,0,0,0.04);
     }
-    #send-btn {
-      background-color: #4f46e5;
-      border: none;
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
+
+    .editor-area {
+      margin-top:4px;
+      border-radius:12px;
+      padding:14px;
+      min-height:420px;
+      max-height:520px;
+      overflow:auto;
+      background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(250,250,250,0.6));
+      box-shadow: inset 6px 6px 16px rgba(0,0,0,0.03), inset -6px -6px 16px rgba(255,255,255,0.7);
+      border: 1px solid rgba(0,0,0,0.03);
     }
-    #send-btn:hover { background-color: #6366f1; }
-    .hud {
-      display: flex;
-      justify-content: space-around;
-      background-color: #18181b;
-      border-top: 1px solid #27272a;
-      padding: 10px;
-      font-size: 14px;
-      color: #cbd5e1;
+
+    /* contenteditable supports markdown input (plain markdown text) */
+    .editor-area .doc {
+      outline:none;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size:15px;
+      color:var(--accent);
+      line-height:1.6;
+      min-height:380px;
+      caret-color: #111;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+    }
+
+    /* Right: preview */
+    .preview {
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .preview .preview-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .preview-body {
+      margin-top:6px;
+      padding:16px;
+      border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(250,250,250,0.7));
+      min-height:420px;
+      overflow:auto;
+      border: 1px solid rgba(0,0,0,0.03);
+    }
+
+    /* Rendered markdown styles (clean, GitHub-ish) */
+    .md h1{font-size:22px;margin:8px 0;color:var(--accent);}
+    .md h2{font-size:18px;margin:8px 0;color:var(--accent);}
+    .md p{margin:8px 0;color:#333;font-size:14px;}
+    .md pre{background:#f6f6f6;padding:12px;border-radius:8px;overflow:auto;font-size:13px}
+    .md code{background:#fafafa;padding:2px 6px;border-radius:6px;font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace}
+    .md blockquote{border-left:3px solid rgba(0,0,0,0.06);padding-left:12px;color:#666;margin:12px 0}
+    .md ul, .md ol{padding-left:20px;margin:8px 0}
+    .md a{color:#1a73e8;text-decoration:none}
+
+    /* Floating AI action when selection exists */
+    .floating-action {
+      position: absolute;
+      display:none;
+      z-index: 40;
+      transform: translate(-50%, -120%);
+      background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(250,250,250,0.8));
+      padding:8px 10px;
+      border-radius:12px;
+      box-shadow: 6px 6px 16px rgba(0,0,0,0.08), -4px -4px 12px rgba(255,255,255,0.9);
+      border:1px solid rgba(255,255,255,0.6);
+      gap:8px;
+      display:flex;
+      align-items:center;
+    }
+
+    .floating-action .small {
+      font-size:13px;color:var(--accent);
+    }
+
+    /* Modal for AI prompt */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 60;
+      background: rgba(18,18,18,0.35);
+      backdrop-filter: blur(4px);
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+    }
+
+    .modal-backdrop.active{display:flex;}
+
+    .modal {
+      width: 720px;
+      max-width: calc(100% - 40px);
+      border-radius:14px;
+      background: linear-gradient(180deg, #ffffff, #fbfbfb);
+      box-shadow: 12px 12px 36px rgba(0,0,0,0.18), -8px -8px 24px rgba(255,255,255,0.95);
+      padding:16px;
+      border:1px solid rgba(255,255,255,0.6);
+    }
+
+    .modal h3{margin:0;font-size:16px;color:var(--accent)}
+    .modal .modal-row{display:flex;gap:12px;margin-top:12px}
+    .modal textarea{
+      width:100%;
+      min-height:120px;
+      resize:vertical;
+      border-radius:10px;
+      padding:12px;
+      border:1px solid rgba(0,0,0,0.06);
+      font-family:inherit;
+      font-size:14px;
+    }
+
+    .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+
+    /* small helpers */
+    .muted{color:var(--muted);font-size:13px}
+    .hint{font-size:12px;color:#666}
+
+    /* Responsive */
+    @media (max-width:980px){
+      .app{grid-template-columns:1fr; height:calc(100vh - 56px)}
+      .app-top{grid-column:1/-1}
     }
   </style>
 </head>
 <body>
-  <div id="chat-box">
-    <div class="assistant-message">Welcome to ARO — your AI-powered infinite text adventure! Type anything to begin.</div>
-  </div>
-  <div class="hud">
-    <div>❤️ Health: <span id="health">100</span></div>
-    <div>⭐ XP: <span id="xp">0</span></div>
-    <div>🎒 Inventory: <span id="inventory">None</span></div>
-  </div>
-  <div id="input-area">
-    <input id="user-input" placeholder="Type your next move..." />
-    <button id="send-btn">Send</button>
+  <div class="app" id="app">
+    <div class="app-top" style="grid-column:1/-1">
+      <div class="brand">
+        <div class="logo">AI</div>
+        <div>
+          <h1>Cloudflare AI — Doc</h1>
+          <p>Notion / GitHub Markdown • Neumorphic editor</p>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="muted">Monochrome • Neumorphism</div>
+        <button class="btn ghost" id="togglePreviewBtn">Live Preview</button>
+      </div>
+    </div>
+
+    <!-- Left: editor panel -->
+    <section class="panel editor" aria-label="Editor">
+      <div class="toolbar">
+        <button class="btn" id="boldBtn"><strong>B</strong></button>
+        <button class="btn" id="italicBtn"><em>I</em></button>
+        <button class="btn" id="codeBtn"><code>{ }</code></button>
+        <div style="flex:1"></div>
+        <div class="hint">Select text to reveal <strong>AI write</strong> action</div>
+      </div>
+
+      <div class="editor-area">
+        <!-- contenteditable for writing raw Markdown; we maintain plain text markdown inside it -->
+        <div id="doc" class="doc" contenteditable="true" spellcheck="true" aria-multiline="true" role="textbox">
+# Start writing — plain Markdown supported
+
+Select any portion of this text (drag) to reveal the <em>AI write</em> action.
+
+You can write headings, lists, code fences, tables, links, etc. The preview on the right renders GitHub-style markdown.
+        </div>
+      </div>
+    </section>
+
+    <!-- Right: preview panel -->
+    <section class="panel preview" aria-label="Preview">
+      <div class="preview-header">
+        <div>
+          <div style="font-size:13px;color:var(--muted)">Preview</div>
+          <div style="font-weight:600; font-size:14px">Rendered Markdown</div>
+        </div>
+        <div class="muted">Cloudflare AI • client-only UI</div>
+      </div>
+
+      <div class="preview-body">
+        <div id="preview" class="md"></div>
+      </div>
+    </section>
+
+    <!-- Floating action that appears near selection -->
+    <div id="floatingAction" class="floating-action" aria-hidden="true" role="menu" title="AI actions">
+      <div class="small">AI write</div>
+      <button class="btn" id="aiWriteBtn" style="padding:6px 10px">✦</button>
+    </div>
   </div>
 
-  <script src="chat.js"></script>
+  <!-- Modal: AI prompt -->
+  <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">AI — Edit / Expand selected text</h3>
+      <div style="margin-top:8px" class="hint">Selected text will be replaced with the AI output. Leave instruction like "make shorter", "expand into a paragraph", "convert to bullet points" or give tone/requirements.</div>
+
+      <div class="modal-row">
+        <textarea id="aiPrompt" placeholder="Write instructions for the AI (example: 'Rewrite to be more formal and 3 short paragraphs.')" autofocus></textarea>
+      </div>
+
+      <div class="actions">
+        <button class="btn ghost" id="modalCancel">Cancel</button>
+        <button class="btn" id="modalGenerate">Generate</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    const chatBox = document.getElementById('chat-box');
-    const userInput = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
-    const healthEl = document.getElementById('health');
-    const xpEl = document.getElementById('xp');
-    const inventoryEl = document.getElementById('inventory');
+    // ================ Utilities ================
+    const doc = document.getElementById('doc');
+    const preview = document.getElementById('preview');
+    const togglePreviewBtn = document.getElementById('togglePreviewBtn');
+    const floatingAction = document.getElementById('floatingAction');
+    const aiWriteBtn = document.getElementById('aiWriteBtn');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalGenerate = document.getElementById('modalGenerate');
+    const modalCancel = document.getElementById('modalCancel');
+    const aiPrompt = document.getElementById('aiPrompt');
 
-    const parser = new DOMParser();
+    // Keep track of current selection range (for replacement)
+    let currentSelectionRange = null;
 
-    // Observe incoming messages from chat.js
-    const observer = new MutationObserver(() => {
-      const lastMsg = chatBox.lastElementChild;
-      if (lastMsg && lastMsg.classList.contains('assistant-message')) {
-        const text = lastMsg.innerText;
-        updateStats(text);
-        runAroCommands(text);
+    // Render markdown into preview area using marked + Prism
+    function renderPreview() {
+      // get raw markdown text from contenteditable
+      // We treat innerText as markdown source (keeps newlines)
+      const md = doc.innerText.replace(/\u00A0/g, ' '); // normalize NBSP
+      // marked options
+      marked.setOptions({
+        gfm: true,
+        breaks: true,
+        highlight: (code, lang) => {
+          try {
+            if (Prism.languages[lang]) {
+              return Prism.highlight(code, Prism.languages[lang], lang);
+            }
+          } catch(e){}
+          return code;
+        }
+      });
+
+      const html = marked.parse(md);
+      preview.innerHTML = html;
+      // re-run prism highlight on newly inserted code blocks
+      Prism.highlightAllUnder(preview);
+    }
+
+    // Initial render
+    renderPreview();
+
+    // Auto-render on input (throttled)
+    let renderTimeout = null;
+    doc.addEventListener('input', () => {
+      if (renderTimeout) clearTimeout(renderTimeout);
+      renderTimeout = setTimeout(renderPreview, 180);
+    });
+
+    // Toolbar helpers (simple markdown insert)
+    document.getElementById('boldBtn').addEventListener('click', () => wrapSelectionWith('**','**'));
+    document.getElementById('italicBtn').addEventListener('click', () => wrapSelectionWith('*','*'));
+    document.getElementById('codeBtn').addEventListener('click', () => wrapSelectionWith('`','`'));
+
+    function wrapSelectionWith(pre, post){
+      // If there's a selection inside doc, wrap it in markdown markers; otherwise insert markers
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      // Only operate if selection is inside our doc
+      if (!doc.contains(range.commonAncestorContainer)) {
+        // fallback: append to end
+        doc.focus();
+        document.execCommand('insertText', false, pre + post);
+        return;
+      }
+      const selectedText = range.toString() || '';
+      if (selectedText.length){
+        const newText = pre + selectedText + post;
+        range.deleteContents();
+        range.insertNode(document.createTextNode(newText));
+        // move caret after insertion
+        sel.collapseToEnd();
+      } else {
+        // insert markers and place caret between them
+        range.insertNode(document.createTextNode(pre + post));
+        // move caret back between the markers
+        const pos = range.endOffset - post.length;
+        sel.collapse(range.endContainer, pos);
+      }
+      // re-render
+      renderPreview();
+    }
+
+    // ============ Selection detection & floating action ============
+    function clearFloating(){
+      floatingAction.style.display = 'none';
+      floatingAction.setAttribute('aria-hidden','true');
+      currentSelectionRange = null;
+    }
+
+    // Show floating action near selection
+    function showFloatingAtRange(range){
+      const rect = range.getBoundingClientRect();
+      if (!rect || (rect.width === 0 && rect.height === 0)) return;
+      const parentRect = document.body.getBoundingClientRect();
+      floatingAction.style.left = (rect.left + rect.width/2) + 'px';
+      floatingAction.style.top = (rect.top) + 'px';
+      floatingAction.style.display = 'flex';
+      floatingAction.setAttribute('aria-hidden','false');
+    }
+
+    // On mouseup / keyup inside doc, check selection
+    function selectionHandler(e){
+      setTimeout(() => { // allow browser selection to settle
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) { clearFloating(); return; }
+        const range = sel.getRangeAt(0);
+        const text = range.toString().trim();
+        // Check selection length and containment in doc
+        if (text.length > 0 && doc.contains(range.commonAncestorContainer)){
+          currentSelectionRange = range.cloneRange();
+          showFloatingAtRange(range);
+          return;
+        }
+        clearFloating();
+      }, 10);
+    }
+
+    doc.addEventListener('mouseup', selectionHandler);
+    doc.addEventListener('keyup', selectionHandler);
+    // Also detect when clicking outside -> hide
+    document.addEventListener('mousedown', (e)=>{
+      if (!doc.contains(e.target) && !floatingAction.contains(e.target) && !modalBackdrop.contains(e.target)){
+        clearFloating();
       }
     });
-    observer.observe(chatBox, { childList: true });
 
-    function updateStats(text) {
-      const healthMatch = text.match(/\*\*Health:\*\*\s*(\d+)/);
-      const xpMatch = text.match(/\*\*XP:\*\*\s*(\d+)/);
-      const invMatch = text.match(/\*\*Inventory:\*\*\s*(.*)/);
-      if (healthMatch) healthEl.textContent = healthMatch[1];
-      if (xpMatch) xpEl.textContent = xpMatch[1];
-      if (invMatch) inventoryEl.textContent = invMatch[1];
-    }
+    // Clicking the floating AI button opens modal and focuses prompt
+    aiWriteBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      // open modal
+      aiPrompt.value = '';
+      modalBackdrop.classList.add('active');
+      aiPrompt.focus();
 
-    function runAroCommands(text) {
-      const matches = text.matchAll(/<aro:(.*?)\s*(.*?)\/>/g);
-      for (const match of matches) {
-        const cmd = match[1];
-        const args = match[2];
-        if (cmd === 'shake') doShake();
-        if (cmd === 'light') flashLight();
-        if (cmd === 'sound') playSound(args.match(/src="(.*?)"/)[1]);
+      // If there is a selection, prefill prompt with a helpful suggestion
+      const selText = (currentSelectionRange ? currentSelectionRange.toString().trim() : '');
+      if (selText){
+        aiPrompt.placeholder = `Instruction examples:
+ - "Shorten this into 2 lines"
+ - "Convert to formal tone"
+ - "Expand to a 4-sentence paragraph"
+ - "Create 3 bullet points summarizing the selected text"
+Selected: "${selText.slice(0,120)}"`;
       }
+    });
+
+    // Modal cancel
+    modalCancel.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', (e) => {
+      if (e.target === modalBackdrop) closeModal();
+    });
+
+    function closeModal(){
+      modalBackdrop.classList.remove('active');
+      aiPrompt.value = '';
+      // keep selection available
     }
 
-    function doShake() {
-      document.body.style.transition = 'transform 0.1s';
-      let i = 0;
-      const shake = setInterval(() => {
-        document.body.style.transform = `translate(${(Math.random()-0.5)*10}px, ${(Math.random()-0.5)*10}px)`;
-        if (++i > 10) { clearInterval(shake); document.body.style.transform = ''; }
-      }, 50);
+    // ================= Replace selection helper =================
+    function replaceSelectionWithMarkdown(newMarkdown){
+      if (!currentSelectionRange) return;
+      // We will replace the selected DOM range with a text node containing newMarkdown
+      // To keep doc editable as plain text markdown, insert text node(s)
+      const range = currentSelectionRange;
+      range.deleteContents();
+      const textNode = document.createTextNode(newMarkdown);
+      range.insertNode(textNode);
+
+      // Move caret after inserted node
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.setStartAfter(textNode);
+      newRange.collapse(true);
+      sel.addRange(newRange);
+
+      // clear stored range
+      currentSelectionRange = null;
+      clearFloating();
+      // re-render preview
+      renderPreview();
+      // focus editor
+      doc.focus();
     }
 
-    function flashLight() {
-      const orig = document.body.style.backgroundColor;
-      document.body.style.backgroundColor = '#fbbf24';
-      setTimeout(() => document.body.style.backgroundColor = orig || '#0e0e10', 300);
-    }
+    // ================= AI Generate action (client side only) =================
+    modalGenerate.addEventListener('click', async () => {
+      const instruction = aiPrompt.value.trim();
+      if (!currentSelectionRange) {
+        alert('No text selected to operate on.');
+        closeModal();
+        return;
+      }
+      // grab selected text
+      const selectedText = currentSelectionRange.toString();
+      // show generate state
+      modalGenerate.textContent = 'Generating…';
+      modalGenerate.disabled = true;
 
-    function playSound(src) {
-      if (!src) return;
-      const audio = new Audio(src);
-      audio.volume = 0.5;
-      audio.play();
-    }
+      // --- NOTE ---
+      // This client code calls a placeholder API endpoint `/api/ai`.
+      // On your Cloudflare Worker / backend, implement an endpoint that accepts:
+      // POST /api/ai { instruction: string, selection: string }
+      // and returns JSON { output: "markdown text" }
+      // The UI will replace the selected markdown with the returned output.
+      // If you prefer different endpoint, change the fetch URL below.
+      // --- END NOTE ---
+
+      try {
+        const payload = {
+          instruction: instruction || '',
+          selection: selectedText,
+          // small metadata you might use server-side
+          context: {
+            source: 'doc-editor',
+            timestamp: new Date().toISOString()
+          }
+        };
+
+        // Make request to backend AI (Cloudflare Worker). This is intentionally minimal.
+        const resp = await fetch('/api/ai', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+
+        if (!resp.ok) {
+          // Try to parse error message
+          const txt = await resp.text();
+          throw new Error(txt || 'AI request failed');
+        }
+
+        // Expect JSON { output: "..." }
+        const data = await resp.json();
+        const aiOutput = (data && data.output) ? data.output : '';
+
+        if (!aiOutput) {
+          alert('AI returned empty output.');
+          closeModal();
+          return;
+        }
+
+        // Replace selection with the AI's markdown output
+        replaceSelectionWithMarkdown(aiOutput);
+
+      } catch (err) {
+        console.error('AI error:', err);
+        alert('Error contacting AI: ' + (err.message || 'unknown'));
+      } finally {
+        modalGenerate.textContent = 'Generate';
+        modalGenerate.disabled = false;
+        closeModal();
+      }
+    });
+
+    // Preview toggle: hides/shows preview
+    let previewVisible = true;
+    togglePreviewBtn.addEventListener('click', () => {
+      previewVisible = !previewVisible;
+      if (previewVisible){
+        document.querySelector('.preview').style.display = 'flex';
+        togglePreviewBtn.textContent = 'Live Preview';
+      } else {
+        document.querySelector('.preview').style.display = 'none';
+        togglePreviewBtn.textContent = 'Show Preview';
+      }
+    });
+
+    // Keyboard shortcut: Cmd/Ctrl+Enter to open AI modal when selection present
+    document.addEventListener('keydown', (e)=>{
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+        // if selection exists open modal
+        const sel = window.getSelection();
+        if (sel && sel.toString().trim().length) {
+          aiWriteBtn.click();
+        }
+      }
+    });
+
+    // Ensure preview updates if user pastes plain text (some browsers clear innerText)
+    doc.addEventListener('paste', (ev)=>{
+      // paste as plain text to preserve markdown
+      ev.preventDefault();
+      const text = (ev.clipboardData || window.clipboardData).getData('text');
+      document.execCommand('insertText', false, text);
+      renderPreview();
+    });
+
+    // Accessibility: make editor focusable quickly by pressing '/'
+    document.addEventListener('keydown', (e)=>{
+      if (e.key === '/' && document.activeElement !== doc && document.activeElement !== aiPrompt){
+        e.preventDefault();
+        doc.focus();
+      }
+    });
+
+    // Keep preview in sync on load
+    window.addEventListener('load', () => {
+      renderPreview();
+    });
+
+    // Small UX: clicking preview will copy selection from preview to editor selection (optional)
+    // (Not required; left out to keep UI simple)
+
   </script>
 </body>
 </html>
