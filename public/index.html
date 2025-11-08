@@ -576,7 +576,7 @@ Selected: "${selText.slice(0,120)}"`;
         };
 
         // Make request to backend AI (Cloudflare Worker). This is intentionally minimal.
-        const resp = await fetch('/api/ai', {
+        const resp = await fetch('/api/chat', {
           method: 'POST',
           headers: {'Content-Type':'application/json'},
           body: JSON.stringify(payload)
@@ -661,5 +661,9 @@ Selected: "${selText.slice(0,120)}"`;
     // (Not required; left out to keep UI simple)
 
   </script>
+
+<!-- Load your existing chat.js -->
+ <script src="chat.js"></script>
+
 </body>
 </html>
